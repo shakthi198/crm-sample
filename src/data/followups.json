@@ -1,0 +1,52 @@
+[
+    {
+        "id": 1,
+        "lead_name": "Sarah Connor",
+        "type": "Call",
+        "date": "2023-10-25",
+        "time": "10:00 AM",
+        "status": "Completed",
+        "assigned_to": "John Doe",
+        "outcome": "Interested in Premium Plan"
+    },
+    {
+        "id": 2,
+        "lead_name": "Kyle Reese",
+        "type": "Email",
+        "date": "2023-10-26",
+        "time": "02:30 PM",
+        "status": "Pending",
+        "assigned_to": "Jane Smith",
+        "outcome": "Waiting for reply"
+    },
+    {
+        "id": 3,
+        "lead_name": "T-800 Model",
+        "type": "Meeting",
+        "date": "2023-10-27",
+        "time": "11:00 AM",
+        "status": "Scheduled",
+        "assigned_to": "John Doe",
+        "outcome": "Product Demo"
+    },
+    {
+        "id": 4,
+        "lead_name": "John Connor",
+        "type": "Call",
+        "date": "2023-10-24",
+        "time": "04:15 PM",
+        "status": "Missed",
+        "assigned_to": "Jane Smith",
+        "outcome": "Left Voicemail"
+    },
+    {
+        "id": 5,
+        "lead_name": "Dr. Silberman",
+        "type": "Email",
+        "date": "2023-10-25",
+        "time": "09:45 AM",
+        "status": "Completed",
+        "assigned_to": "Sarah Connor",
+        "outcome": "Sent Proposal"
+    }
+]

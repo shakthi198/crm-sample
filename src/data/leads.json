@@ -1,0 +1,134 @@
+[
+    {
+        "id": 1,
+        "client_name": "Acme Corporation",
+        "phone": "+91-9876543210",
+        "email": "contact@acme.com",
+        "company": "Acme Corp",
+        "source": "Website",
+        "status": "Qualified",
+        "assigned_to": "Sarah Williams",
+        "remarks": "Interested in enterprise plan"
+    },
+    {
+        "id": 2,
+        "client_name": "Tech Solutions Ltd",
+        "phone": "+91-9876543211",
+        "email": "info@techsolutions.com",
+        "company": "Tech Solutions",
+        "source": "Referral",
+        "status": "Contacted",
+        "assigned_to": "Mike Johnson",
+        "remarks": "Follow up next week"
+    },
+    {
+        "id": 3,
+        "client_name": "Global Enterprises",
+        "phone": "+91-9876543212",
+        "email": "sales@global.com",
+        "company": "Global Enterprises",
+        "source": "Cold Call",
+        "status": "New",
+        "assigned_to": "Sarah Williams",
+        "remarks": "Initial contact made"
+    },
+    {
+        "id": 4,
+        "client_name": "Innovative Systems",
+        "phone": "+91-9876543213",
+        "email": "hello@innovative.com",
+        "company": "Innovative Systems",
+        "source": "LinkedIn",
+        "status": "Proposal Sent",
+        "assigned_to": "Jane Smith",
+        "remarks": "Awaiting response on proposal"
+    },
+    {
+        "id": 5,
+        "client_name": "Prime Industries",
+        "phone": "+91-9876543214",
+        "email": "contact@prime.com",
+        "company": "Prime Industries",
+        "source": "Trade Show",
+        "status": "Negotiation",
+        "assigned_to": "Mike Johnson",
+        "remarks": "Discussing pricing options"
+    },
+    {
+        "id": 6,
+        "client_name": "Digital Dynamics",
+        "phone": "+91-9876543215",
+        "email": "info@digitaldynamics.com",
+        "company": "Digital Dynamics",
+        "source": "Website",
+        "status": "Qualified",
+        "assigned_to": "Sarah Williams",
+        "remarks": "Budget confirmed"
+    },
+    {
+        "id": 7,
+        "client_name": "Future Tech Inc",
+        "phone": "+91-9876543216",
+        "email": "sales@futuretech.com",
+        "company": "Future Tech",
+        "source": "Email Campaign",
+        "status": "Closed Won",
+        "assigned_to": "Jane Smith",
+        "remarks": "Contract signed"
+    },
+    {
+        "id": 8,
+        "client_name": "Smart Solutions",
+        "phone": "+91-9876543217",
+        "email": "contact@smartsolutions.com",
+        "company": "Smart Solutions",
+        "source": "Referral",
+        "status": "Contacted",
+        "assigned_to": "Mike Johnson",
+        "remarks": "Scheduled demo for next week"
+    },
+    {
+        "id": 9,
+        "client_name": "NextGen Systems",
+        "phone": "+91-9876543218",
+        "email": "info@nextgen.com",
+        "company": "NextGen Systems",
+        "source": "Cold Call",
+        "status": "New",
+        "assigned_to": "Sarah Williams",
+        "remarks": "Left voicemail"
+    },
+    {
+        "id": 10,
+        "client_name": "Alpha Technologies",
+        "phone": "+91-9876543219",
+        "email": "hello@alphatech.com",
+        "company": "Alpha Technologies",
+        "source": "Website",
+        "status": "Qualified",
+        "assigned_to": "Jane Smith",
+        "remarks": "High priority lead"
+    },
+    {
+        "id": 11,
+        "client_name": "Beta Innovations",
+        "phone": "+91-9876543220",
+        "email": "contact@betainnovations.com",
+        "company": "Beta Innovations",
+        "source": "LinkedIn",
+        "status": "Proposal Sent",
+        "assigned_to": "Mike Johnson",
+        "remarks": "Proposal sent via email"
+    },
+    {
+        "id": 12,
+        "client_name": "Gamma Corp",
+        "phone": "+91-9876543221",
+        "email": "sales@gammacorp.com",
+        "company": "Gamma Corp",
+        "source": "Referral",
+        "status": "Contacted",
+        "assigned_to": "Sarah Williams",
+        "remarks": "Interested in demo"
+    }
+]

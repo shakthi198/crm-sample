@@ -1,0 +1,157 @@
+{
+    "kpis": [
+        {
+            "id": "total_leads",
+            "title": "Total Leads",
+            "value": "1247",
+            "icon": "People",
+            "color": "#3b82f6",
+            "bgColor": "#eff6ff",
+            "link": "/leads"
+        },
+        {
+            "id": "today_followups",
+            "title": "Follow-ups Today",
+            "value": "32",
+            "icon": "TrendingUp",
+            "color": "#10b981",
+            "bgColor": "#f0fdf4",
+            "scrollTo": "followUps"
+        },
+        {
+            "id": "total_revenue",
+            "title": "Total Revenue",
+            "value": "₹24.5L",
+            "icon": "CurrencyRupee",
+            "color": "#f59e0b",
+            "bgColor": "#fffbeb"
+        },
+        {
+            "id": "total_clients",
+            "title": "Total Clients",
+            "value": "856",
+            "icon": "Business",
+            "color": "#8b5cf6",
+            "bgColor": "#faf5ff",
+            "link": "/clients"
+        }
+    ],
+    "leads_by_status": [
+        {
+            "status": "New",
+            "count": 245
+        },
+        {
+            "status": "Contacted",
+            "count": 412
+        },
+        {
+            "status": "Qualified",
+            "count": 298
+        },
+        {
+            "status": "Proposal Sent",
+            "count": 156
+        },
+        {
+            "status": "Negotiation",
+            "count": 89
+        },
+        {
+            "status": "Closed Won",
+            "count": 47
+        }
+    ],
+    "revenue_chart": [
+        {
+            "month": "Jan",
+            "revenue": 185000
+        },
+        {
+            "month": "Feb",
+            "revenue": 220000
+        },
+        {
+            "month": "Mar",
+            "revenue": 195000
+        },
+        {
+            "month": "Apr",
+            "revenue": 245000
+        },
+        {
+            "month": "May",
+            "revenue": 280000
+        },
+        {
+            "month": "Jun",
+            "revenue": 310000
+        }
+    ],
+    "today_followups_table": [
+        {
+            "id": 1,
+            "lead_name": "Acme Corporation",
+            "phone": "+91-9876543210",
+            "call_status": "Scheduled",
+            "next_followup_time": "11:00 AM",
+            "assigned_to": "Sarah Williams"
+        },
+        {
+            "id": 2,
+            "lead_name": "Tech Solutions Ltd",
+            "phone": "+91-9876543211",
+            "call_status": "Pending",
+            "next_followup_time": "02:00 PM",
+            "assigned_to": "Mike Johnson"
+        },
+        {
+            "id": 3,
+            "lead_name": "Global Enterprises",
+            "phone": "+91-9876543212",
+            "call_status": "Completed",
+            "next_followup_time": "04:30 PM",
+            "assigned_to": "Sarah Williams"
+        },
+        {
+            "id": 4,
+            "lead_name": "Innovative Systems",
+            "phone": "+91-9876543213",
+            "call_status": "Scheduled",
+            "next_followup_time": "10:30 AM",
+            "assigned_to": "Jane Smith"
+        },
+        {
+            "id": 5,
+            "lead_name": "Prime Industries",
+            "phone": "+91-9876543214",
+            "call_status": "Pending",
+            "next_followup_time": "03:00 PM",
+            "assigned_to": "Mike Johnson"
+        },
+        {
+            "id": 6,
+            "lead_name": "Digital Dynamics",
+            "phone": "+91-9876543215",
+            "call_status": "Scheduled",
+            "next_followup_time": "01:00 PM",
+            "assigned_to": "Sarah Williams"
+        },
+        {
+            "id": 7,
+            "lead_name": "Future Tech Inc",
+            "phone": "+91-9876543216",
+            "call_status": "Completed",
+            "next_followup_time": "05:00 PM",
+            "assigned_to": "Jane Smith"
+        },
+        {
+            "id": 8,
+            "lead_name": "Smart Solutions",
+            "phone": "+91-9876543217",
+            "call_status": "Pending",
+            "next_followup_time": "09:30 AM",
+            "assigned_to": "Mike Johnson"
+        }
+    ]
+}

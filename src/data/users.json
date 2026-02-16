@@ -1,0 +1,56 @@
+[
+    {
+        "id": 1,
+        "email": "superadmin@crm.com",
+        "password": "super123",
+        "role": "Super Admin",
+        "name": "Super Admin User",
+        "organization_id": "ALL",
+        "status":"Active"
+    },
+    {
+        "id": 2,
+        "email": "admin@crm.com",
+        "password": "admin123",
+        "role": "Admin",
+        "name": "Admin User",
+        "organization_id": "ORG001",
+        "status":"Active"
+    },
+    {
+        "id": 3,
+        "email": "manager@crm.com",
+        "password": "manager123",
+        "role": "Manager",
+        "name": "Manager User",
+        "organization_id": "ORG001",
+        "status":"Inactive"
+    },
+    {
+        "id": 4,
+        "email": "telecaller@crm.com",
+        "password": "tele123",
+        "role": "Telecaller",
+        "name": "Sarah Williams",
+        "organization_id": "ORG001",
+        "status":"Active"
+    },
+    {
+        "id": 5,
+        "email": "finance@crm.com",
+        "password": "finance123",
+        "role": "Finance",
+        "name": "Finance User",
+        "organization_id": "ORG001",
+        "status":"Inactive"
+    },
+    {
+        "id": 6,
+        "email": "other_admin@crm.com",
+        "password": "admin456",
+        "role": "Admin",
+        "name": "Other Org Admin",
+        "organization_id": "ORG002",
+        "status":"Active"
+    }
+]
