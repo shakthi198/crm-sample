@@ -231,4 +231,3 @@ function handleDelete($conn, $auth, $org_guid)
     $stmt->close();
 }
 
-

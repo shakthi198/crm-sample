@@ -38,7 +38,7 @@ use Firebase\JWT\Key;
    DB CONNECTION
 ========================= */
 
-$conn = new mysqli("localhost", "root", "", "crm");
+$conn = new mysqli("localhost", "root", "", "crm_sample");
 
 if ($conn->connect_error) {
 
@@ -150,27 +150,50 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === "GET") {
 
-    $sql = "
-        SELECT
-            l.id,
-            l.lead_guid,
-            l.client_name,
-            l.phone,
-            l.email,
-            l.company,
-            l.source,
-            l.status,
-            l.assigned_to,
-            l.remarks,
-            u.name AS assigned_name
-        FROM leads l
-        LEFT JOIN users u ON l.assigned_to = u.user_guid
-        WHERE l.is_active = 1 AND l.organization_guid = ?
-        ORDER BY l.id DESC
-    ";
+    if ($org_guid) {
+        $sql = "
+            SELECT
+                l.id,
+                l.lead_guid,
+                l.client_name,
+                l.phone,
+                l.email,
+                l.company,
+                l.source,
+                l.status,
+                l.assigned_to,
+                l.remarks,
+                u.name AS assigned_name
+            FROM leads l
+            LEFT JOIN users u ON l.assigned_to = u.user_guid
+            WHERE l.is_active = 1 AND l.organization_guid = ?
+            ORDER BY l.id DESC
+        ";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $org_guid);
+    } else {
+        // Super Admin sees all
+        $sql = "
+            SELECT
+                l.id,
+                l.lead_guid,
+                l.client_name,
+                l.phone,
+                l.email,
+                l.company,
+                l.source,
+                l.status,
+                l.assigned_to,
+                l.remarks,
+                u.name AS assigned_name
+            FROM leads l
+            LEFT JOIN users u ON l.assigned_to = u.user_guid
+            WHERE l.is_active = 1
+            ORDER BY l.id DESC
+        ";
+        $stmt = $conn->prepare($sql);
+    }
 
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $org_guid);
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -219,6 +242,8 @@ if ($method === "POST") {
         (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 1)
     ");
 
+    $assigned_to = !empty($input['assigned_to']) ? $input['assigned_to'] : null;
+
     $stmt->bind_param(
         "ssssssssss",
         $guid,
@@ -228,7 +253,7 @@ if ($method === "POST") {
         $input['company'],
         $input['source'],
         $input['status'],
-        $input['assigned_to'],
+        $assigned_to,
         $input['remarks'],
         $org_guid
     );
