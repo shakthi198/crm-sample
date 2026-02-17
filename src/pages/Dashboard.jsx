@@ -98,16 +98,74 @@ const Dashboard = () => {
     return icons[iconName] || <PeopleIcon sx={{ fontSize: 28 }} />;
   };
 
-  const kpiCards =
-    data?.kpis.map((kpi) => ({
+  const kpiUiConfig = {
+    total_leads: {
+      title: "Total Leads",
+      icon: "People",
+      bgColor: "#eaf2ff",
+      color: "#3b82f6",
+    },
+    followups: {
+      title: "Follow-ups Today",
+      icon: "TrendingUp",
+      bgColor: "#eaf8ef",
+      color: "#10b981",
+    },
+    revenue: {
+      title: "Total Revenue",
+      icon: "CurrencyRupee",
+      bgColor: "#fff8e8",
+      color: "#f59e0b",
+    },
+    organizations: {
+      title: "Total Clients",
+      icon: "Business",
+      bgColor: "#f3ecff",
+      color: "#8b5cf6",
+    },
+  };
+
+  const preferredKpiOrder = [
+    "total_leads",
+    "followups",
+    "revenue",
+    "organizations",
+  ];
+  const rawKpis = data?.kpis || [];
+  const kpiMap = new Map(rawKpis.map((kpi) => [kpi.id, kpi]));
+  const orderedKpis = [
+    ...preferredKpiOrder.map((id) => kpiMap.get(id)).filter(Boolean),
+    ...rawKpis.filter((kpi) => !preferredKpiOrder.includes(kpi.id)),
+  ];
+
+  const formatKpiValue = (kpi) => {
+    if (kpi.id === "revenue") {
+      const amount = Number(kpi.value || 0);
+      return new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency: "INR",
+        maximumFractionDigits: 0,
+      }).format(Number.isFinite(amount) ? amount : 0);
+    }
+    return kpi.value;
+  };
+
+  const kpiCards = orderedKpis.map((kpi) => {
+    const ui = kpiUiConfig[kpi.id] || {};
+    return {
       ...kpi,
-      icon: getIcon(kpi.icon),
+      title: ui.title || kpi.title,
+      value: formatKpiValue(kpi),
+      icon: getIcon(ui.icon || kpi.icon),
+      bgColor: ui.bgColor || "#eaf2ff",
+      color: ui.color || "#3b82f6",
       onClick: kpi.link
         ? () => navigate(kpi.link)
         : kpi.scrollTo === "followUps"
           ? scrollToFollowUps
           : undefined,
-    })) || [];
+    };
+  });
 
   const getStatusColor = (status) => {
     if (status === "Completed") return "success";
@@ -143,13 +201,7 @@ const Dashboard = () => {
     return cleanToken;
   };
 
-  const fallbackToken =
-    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3NzA4MDM4NDYsIm9yZ2FuaXphdGlvbl9ndWlkIjoiNDljNGMxMjItMDcxOC0xMWYxLTljNDItZTIxYWQ4ZjAyYjA0IiwiYWRtaW5fZ3VpZCI6IjQ5YzRjMWM2LTA3MTgtMTFmMS05YzQyLWUyMWFkOGYwMmIwNCIsInVzZXJuYW1lIjoiYWRtaW4iLCJyb2xlIjoiQWRtaW4iLCJpc19hY3RpdmUiOjF9.haZqmTOMh4bBXS-3AhsCGxtfAqmTAm_pZqeA14o2izc";
-  const tokenFromStorage = normalizeToken(localStorage.getItem("token"));
-  const token =
-    tokenFromStorage.split(".").length === 3
-      ? tokenFromStorage
-      : normalizeToken(fallbackToken);
+  const token =normalizeToken(localStorage.getItem("token"));
 
   useEffect(() => {
     const fetchDashboard = async () => {

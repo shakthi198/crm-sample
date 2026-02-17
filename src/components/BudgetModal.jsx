@@ -20,6 +20,7 @@ import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import CalculateIcon from "@mui/icons-material/Calculate";
 import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
+import apiEndpoints from "../apiconfig";
 
 
 const InputCard = React.memo(({ label, icon, children }) => {
@@ -75,7 +76,6 @@ const InputCard = React.memo(({ label, icon, children }) => {
 
 
 const BudgetModal = ({ open, onClose, onSave, budget }) => {
-  // const token = localStorage.getItem('token'); // Removed insecure token access
     const theme = useTheme();
   const [leads, setLeads] = useState([]);
   const [loadingLeads, setLoadingLeads] = useState(false);
@@ -95,7 +95,7 @@ const BudgetModal = ({ open, onClose, onSave, budget }) => {
     const fetchLeads = async () => {
       try {
         const res = await fetch(
-          "http://localhost/crm/api/dropdown.php?table=leads",
+          `${apiEndpoints.dropdown}?table=leads`,
         );
         const data = await res.json();
 

@@ -2,7 +2,7 @@
 
 ob_start();
 
-header("Access-Control-Allow-Origin: http://localhost:5173");
+header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Credentials: true");
@@ -104,30 +104,25 @@ if (!$organization_guid) {
 $response = [];
 
 /* ===============================
-   1️⃣ KPI COUNTS
+   1ï¸âƒ£ KPI COUNTS
 =================================*/
 
-// Total Leads
+// Total Leads (all active leads)
 $stmt = $conn->prepare("
     SELECT COUNT(*) as total 
     FROM leads 
-    WHERE organization_guid = ? 
-    AND is_active = 1
+    WHERE is_active = 1
 ");
-$stmt->bind_param("s", $organization_guid);
 $stmt->execute();
 $totalLeads = $stmt->get_result()->fetch_assoc()['total'] ?? 0;
 
 
-// Total Revenue (Approved Budgets)
+// Total Revenue (all active budgets)
 $stmt = $conn->prepare("
     SELECT SUM(estimated_amount - discount) as revenue 
     FROM budgets
-    WHERE organization_guid = ?
-    AND status = 'Approved'
-    AND is_active = 1
+    WHERE is_active = 1
 ");
-$stmt->bind_param("s", $organization_guid);
 $stmt->execute();
 $totalRevenue = $stmt->get_result()->fetch_assoc()['revenue'] ?? 0;
 
@@ -136,11 +131,9 @@ $totalRevenue = $stmt->get_result()->fetch_assoc()['revenue'] ?? 0;
 $stmt = $conn->prepare("
     SELECT COUNT(*) as total 
     FROM followups
-    WHERE organization_guid = ?
-    AND DATE(next_followup_date) = CURDATE()
+    WHERE DATE(`date`) = CURDATE()
     AND is_active = 1
 ");
-$stmt->bind_param("s", $organization_guid);
 $stmt->execute();
 $totalFollowups = $stmt->get_result()->fetch_assoc()['total'] ?? 0;
 
@@ -163,7 +156,7 @@ $response['kpis'] = [
     [
         "id" => "revenue",
         "title" => "Revenue",
-        "value" => "₹" . number_format($totalRevenue ?? 0)
+        "value" => (float)($totalRevenue ?? 0)
     ],
     [
         "id" => "followups",
@@ -179,26 +172,42 @@ $response['kpis'] = [
 
 
 /* ===============================
-   2️⃣ LEADS BY STATUS
+   2ï¸âƒ£ LEADS BY STATUS
 =================================*/
 
 $stmt = $conn->prepare("
-    SELECT status, COUNT(*) as count
+    SELECT
+        CASE
+            WHEN LOWER(TRIM(status)) IN ('open', 'new') THEN 'New'
+            WHEN LOWER(TRIM(status)) = 'contacted' THEN 'Contacted'
+            WHEN LOWER(TRIM(status)) = 'qualified' THEN 'Qualified'
+            WHEN LOWER(TRIM(status)) = 'proposal sent' THEN 'Proposal Sent'
+            WHEN LOWER(TRIM(status)) = 'negotiation' THEN 'Negotiation'
+            WHEN LOWER(TRIM(status)) IN ('closed won', 'won', 'closed') THEN 'Closed Won'
+            ELSE status
+        END AS normalized_status,
+        COUNT(*) as count
     FROM leads
-    WHERE organization_guid = ?
-    AND is_active = 1
-    GROUP BY status
+    WHERE is_active = 1
+    GROUP BY normalized_status
 ");
-$stmt->bind_param("s", $organization_guid);
 $stmt->execute();
 $result = $stmt->get_result();
 
 $leadsByStatus = [];
+$defaultLeadStatuses = ['Closed Won', 'Contacted', 'Negotiation', 'New', 'Proposal Sent', 'Qualified'];
+$statusMap = [];
 
 while ($row = $result->fetch_assoc()) {
+    $statusLabel = trim((string)($row['normalized_status'] ?? ''));
+    if ($statusLabel === '') continue;
+    $statusMap[$statusLabel] = (int)$row['count'];
+}
+
+foreach ($defaultLeadStatuses as $statusLabel) {
     $leadsByStatus[] = [
-        "status" => $row['status'],
-        "count" => (int)$row['count']
+        "status" => $statusLabel,
+        "count" => $statusMap[$statusLabel] ?? 0
     ];
 }
 
@@ -214,13 +223,10 @@ $stmt = $conn->prepare("
         DATE_FORMAT(created_at, '%b') as month,
         SUM(estimated_amount - discount) as revenue
     FROM budgets
-    WHERE organization_guid = ?
-    AND status = 'Approved'
-    AND is_active = 1
+    WHERE is_active = 1
     GROUP BY MONTH(created_at)
     ORDER BY MONTH(created_at)
 ");
-$stmt->bind_param("s", $organization_guid);
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -237,25 +243,26 @@ $response['revenue_chart'] = $revenueChart;
 
 
 /* ===============================
-   4️⃣ TODAY FOLLOWUPS TABLE
+   4ï¸âƒ£ TODAY FOLLOWUPS TABLE
 =================================*/
 
 $stmt = $conn->prepare("
     SELECT 
         l.client_name as lead_name,
         l.phone,
-        f.call_status,
-        f.next_followup_date,
+        f.status as call_status,
+        CASE
+            WHEN f.`time` IS NULL OR f.`time` = '' THEN DATE_FORMAT(f.`date`, '%Y-%m-%d')
+            ELSE DATE_FORMAT(TIME(f.`time`), '%h:%i %p')
+        END as next_followup_date,
         u.name as assigned_to
     FROM followups f
     LEFT JOIN leads l ON l.lead_guid = f.lead_guid
-    LEFT JOIN users u ON u.user_guid = f.user_guid
-    WHERE f.organization_guid = ?
-    AND DATE(f.next_followup_date) = CURDATE()
+    LEFT JOIN users u ON u.user_guid = f.assigned_to_guid
+    WHERE DATE(f.`date`) = CURDATE()
     AND f.is_active = 1
-    ORDER BY f.next_followup_date ASC
+    ORDER BY f.`date` ASC, f.`time` ASC
 ");
-$stmt->bind_param("s", $organization_guid);
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -276,3 +283,4 @@ sendJsonResponse(200, [
     "success" => true,
     "data" => $response
 ]);
+

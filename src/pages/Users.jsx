@@ -124,7 +124,7 @@ const Users = () => {
     const handleSaveUser = async (formData) => {
         try {
             if (modalMode === 'add') {
-                await fetch(`${BASE_URL}/create.php`, {
+                await fetch(`${BASE_URL}/users.php`, {
                     method: 'POST',
                     headers: getHeaders(),
                     body: JSON.stringify(formData)

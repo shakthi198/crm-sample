@@ -31,12 +31,12 @@ const BudgetPage = () => {
   });
   // :wrench: Get token from localStorage with fallback
   const token =
-    localStorage.getItem("crm_token");
+    localStorage.getItem("token");
   const fetchBudgets = async () => {
     try {
       setLoading(true);
       const res = await fetch(
-        apiEndpoints.budget,
+        `${apiEndpoints.budget}`,
         {
           method: "GET",
           headers: {
@@ -101,7 +101,7 @@ const BudgetPage = () => {
     const method = budgetData.budget_guid ? "PUT" : "POST";
     try {
       const res = await fetch(
-        apiEndpoints.budget,
+        `${apiEndpoints.budget}`,
         {
           method,
           headers: {
@@ -151,7 +151,7 @@ const BudgetPage = () => {
     };
     try {
       const res = await fetch(
-        apiEndpoints.budget,
+        `${apiEndpoints.budget}`,
         {
           method: "PUT",
           headers: {

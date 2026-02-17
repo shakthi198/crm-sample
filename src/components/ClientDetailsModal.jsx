@@ -17,12 +17,12 @@ import {
   Description as FileIcon,
   Edit as EditIcon,
 } from "@mui/icons-material";
+import apiEndpoints from "../apiconfig";
 
 // 🔥 MANUAL TOKEN
-const token =
-  "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3NzA4MDM4NDYsIm9yZ2FuaXphdGlvbl9ndWlkIjoiNDljNGMxMjItMDcxOC0xMWYxLTljNDItZTIxYWQ4ZjAyYjA0IiwiYWRtaW5fZ3VpZCI6IjQ5YzRjMWM2LTA3MTgtMTFmMS05YzQyLWUyMWFkOGYwMmIwNCIsInVzZXJuYW1lIjoiYWRtaW4iLCJyb2xlIjoiQWRtaW4iLCJpc19hY3RpdmUiOjF9.haZqmTOMh4bBXS-3AhsCGxtfAqmTAm_pZqeA14o2izc";
+const token =localStorage.getItem("token");
 
-const API_URL = "http://localhost/crm/clients_page.php";
+const API_URL = `${apiEndpoints.clients}`;
 
 const ClientDetailsModal = ({ open, onClose, client, onEdit }) => {
   const theme = useTheme();
