@@ -1,202 +1,320 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  TextField,
-  MenuItem,
-  Grid,
-  Box,
-} from "@mui/material";
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Button,
+    TextField,
+    MenuItem,
+    Grid,
+    Box,
+    Typography,
+    useTheme,
+    IconButton
+} from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import CloseIcon from '@mui/icons-material/Close';
+import PersonIcon from '@mui/icons-material/Person';
+import CategoryIcon from '@mui/icons-material/Category';
+import EventIcon from '@mui/icons-material/Event';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
+import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
+import NotesIcon from '@mui/icons-material/Notes';
 
-const FollowupModal = (props) => {
-  const { leads = [], users = [] } = props;
-  const { open, onClose, onSave, followup } = props;
-
-  const [formData, setFormData] = useState({
-    lead_id: "",
-    type: "Call",
-    date: "",
-    time: "",
-    status: "Pending",
-    assigned_to: "",
-    outcome: "",
-  });
-
-  useEffect(() => {
-    if (followup) {
-      setFormData({
-        lead_id: followup.lead_id || "",
-        lead_id: followup.lead_guid || "",
-        type: followup.type || "Call",
-        date: followup.date || "",
-        time: followup.time || "",
-        status: followup.status || "Pending",
-        assigned_to: followup.user_guid || "",
-        outcome: followup.outcome || "",
-      });
-    } else {
-      setFormData({
-        lead_id: "",
-        type: "Call",
-        date: new Date().toISOString().split("T")[0],
-        time: "",
-        status: "Pending",
-        assigned_to: "",
-        outcome: "",
-      });
-    }
-  }, [followup, open]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = () => {
-    onSave(formData);
-  };
-
-  return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ fontWeight: 700 }}>
-        {followup ? "Edit Follow-up" : "New Follow-up"}
-      </DialogTitle>
-      <DialogContent dividers>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
-          <Box>
-            <TextField
-              select
-              fullWidth
-              label="Lead Name"
-              name="lead_id"
-              value={formData.lead_id}
-              onChange={handleChange}
-              variant="outlined"
-              SelectProps={{
-                MenuProps: {
-                  PaperProps: { sx: { maxHeight: 300 } },
-                },
-              }}
-            >
-              {leads.map((lead) => (
-                <MenuItem key={lead.lead_guid} value={lead.lead_guid}>
-                  {lead.client_name}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Box>
-
-          <Box sx={{ display: "flex", gap: 2 }}>
-            <TextField
-              select
-              fullWidth
-              label="Type"
-              name="type"
-              value={formData.type}
-              onChange={handleChange}
-              variant="outlined"
-              sx={{ flex: 1 }}
-            >
-              <MenuItem value="Call">Call</MenuItem>
-              <MenuItem value="Email">Email</MenuItem>
-              <MenuItem value="Meeting">Meeting</MenuItem>
-            </TextField>
-
-            <TextField
-              select
-              fullWidth
-              label="Status"
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              variant="outlined"
-              sx={{ flex: 1 }}
-            >
-              <MenuItem value="Pending">Pending</MenuItem>
-              <MenuItem value="Completed">Completed</MenuItem>
-              <MenuItem value="Missed">Missed</MenuItem>
-              <MenuItem value="Scheduled">Scheduled</MenuItem>
-            </TextField>
-          </Box>
-
-          <Box sx={{ display: "flex", gap: 2 }}>
-            <TextField
-              fullWidth
-              type="date"
-              label="Date"
-              name="date"
-              value={formData.date}
-              onChange={handleChange}
-              InputLabelProps={{ shrink: true }}
-              variant="outlined"
-              sx={{ flex: 1 }}
-            />
-            <TextField
-              fullWidth
-              type="time"
-              label="Time"
-              name="time"
-              value={formData.time}
-              onChange={handleChange}
-              InputLabelProps={{ shrink: true }}
-              variant="outlined"
-              sx={{ flex: 1 }}
-            />
-          </Box>
-
-          <Box>
-            <TextField
-              select
-              fullWidth
-              label="Assigned To"
-              name="assigned_to"
-              value={formData.assigned_to}
-              onChange={handleChange}
-              variant="outlined"
-              SelectProps={{
-                MenuProps: {
-                  PaperProps: { sx: { maxHeight: 300 } },
-                },
-              }}
-            >
-              {users.map((user) => (
-                <MenuItem key={user.user_guid} value={user.user_guid}>
-                  {user.name}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Box>
-
-          <Box>
-            <TextField
-              fullWidth
-              multiline
-              rows={3}
-              label="Outcome / Notes"
-              name="outcome"
-              value={formData.outcome}
-              onChange={handleChange}
-              variant="outlined"
-            />
-          </Box>
+// Card wrapper for inputs - Defined outside to prevent remounting and focus loss
+const InputCard = ({ label, icon, children }) => {
+    const theme = useTheme();
+    return (
+        <Box sx={{
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 1.5,
+            p: 2,
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: '12px',
+            bgcolor: 'background.paper',
+            transition: 'all 0.2s',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+            '&:hover': {
+                borderColor: theme.palette.primary.main,
+                boxShadow: '0 4px 12px rgba(61, 82, 160, 0.08)'
+            }
+        }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{
+                    color: theme.palette.primary.main,
+                    display: 'flex',
+                    alignItems: 'center',
+                    bgcolor: alpha(theme.palette.primary.main, 0.1),
+                    p: 0.5,
+                    borderRadius: '6px'
+                }}>
+                    {icon}
+                </Box>
+                <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    {label}
+                </Typography>
+            </Box>
+            <Box sx={{ flexGrow: 1 }}>
+                {children}
+            </Box>
         </Box>
-      </DialogContent>
-      <DialogActions sx={{ p: 2.5 }}>
-        <Button onClick={onClose} color="inherit">
-          Cancel
-        </Button>
-        <Button onClick={handleSubmit} variant="contained" color="primary">
-          Save
-        </Button>
-      </DialogActions>
-    </Dialog>
-  );
+    );
+};
+
+const FollowupModal = ({ open, onClose, onSave, followup, leads = [], users = [] }) => {
+    const theme = useTheme();
+
+    // Initial blank state
+    const initialState = {
+        lead_id: '',
+        type: 'Call',
+        date: new Date().toISOString().split('T')[0],
+        time: '',
+        status: 'Pending',
+        assigned_to: '',
+        outcome: ''
+    };
+
+    const [formData, setFormData] = useState(initialState);
+
+    useEffect(() => {
+        if (followup) {
+            setFormData({
+                lead_id: followup.lead_guid || followup.lead_id || '',
+                type: followup.type || 'Call',
+                date: followup.date || '',
+                time: followup.time || '',
+                status: followup.status || 'Pending',
+                assigned_to: followup.user_guid || '',
+                outcome: followup.outcome || ''
+            });
+        } else if (open) {
+            // Reset to default new state when opening fresh
+            setFormData(initialState);
+        }
+    }, [followup, open]);
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleSubmit = () => {
+        onSave(formData);
+    };
+
+    return (
+        <Dialog
+            open={open}
+            onClose={onClose}
+            maxWidth="md"
+            fullWidth
+            PaperProps={{
+                sx: {
+                    borderRadius: '16px',
+                    width: '100%',
+                    maxWidth: '820px',
+                    boxShadow: '0 24px 48px rgba(0,0,0,0.2)'
+                }
+            }}
+        >
+            <DialogTitle sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                px: 4,
+                py: 2.5,
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+                bgcolor: 'background.paper',
+                fontFamily: 'Montserrat',
+                fontWeight: 700,
+                fontSize: '24px'
+            }}>
+                {followup ? 'Edit Follow-up' : 'New Follow-up'}
+                <IconButton onClick={onClose} size="small" sx={{ bgcolor: 'action.hover' }}>
+                    <CloseIcon />
+                </IconButton>
+            </DialogTitle>
+
+            <DialogContent dividers sx={{ p: 4, bgcolor: '#f8f9fc' }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
+
+                    {/* Row 1 */}
+                    <InputCard label="Lead Name" icon={<PersonIcon fontSize="small" />}>
+                        <TextField
+                            select
+                            fullWidth
+                            variant="outlined"
+                            name="lead_id"
+                            value={formData.lead_id}
+                            onChange={handleChange}
+                            size="small"
+                        >
+                            {leads.map((lead) => (
+                                <MenuItem key={lead.lead_guid || lead.id} value={lead.lead_guid || lead.id}>
+                                    {lead.client_name}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+                    </InputCard>
+
+                    <InputCard label="Type" icon={<CategoryIcon fontSize="small" />}>
+                        <TextField
+                            select
+                            fullWidth
+                            variant="outlined"
+                            name="type"
+                            value={formData.type}
+                            onChange={handleChange}
+                            size="small"
+                        >
+                            <MenuItem value="Call">Call</MenuItem>
+                            <MenuItem value="Email">Email</MenuItem>
+                            <MenuItem value="Meeting">Meeting</MenuItem>
+                        </TextField>
+                    </InputCard>
+
+                    {/* Row 2 */}
+                    <InputCard label="Status" icon={<AssignmentTurnedInIcon fontSize="small" />}>
+                        <TextField
+                            select
+                            fullWidth
+                            variant="outlined"
+                            name="status"
+                            value={formData.status}
+                            onChange={handleChange}
+                            size="small"
+                        >
+                            <MenuItem value="Pending">Pending</MenuItem>
+                            <MenuItem value="Completed">Completed</MenuItem>
+                            <MenuItem value="Missed">Missed</MenuItem>
+                            <MenuItem value="Scheduled">Scheduled</MenuItem>
+                        </TextField>
+                    </InputCard>
+
+                    <InputCard label="Assigned To" icon={<AssignmentIndIcon fontSize="small" />}>
+                        <TextField
+                            select
+                            fullWidth
+                            variant="outlined"
+                            name="assigned_to"
+                            value={formData.assigned_to}
+                            onChange={handleChange}
+                            size="small"
+                        >
+                            {users.map((user) => (
+                                <MenuItem key={user.user_guid} value={user.user_guid}>
+                                    {user.name}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+                    </InputCard>
+
+                    {/* Row 3 */}
+                    <InputCard label="Date" icon={<EventIcon fontSize="small" />}>
+                        <TextField
+                            fullWidth
+                            type="date"
+                            variant="outlined"
+                            name="date"
+                            value={formData.date}
+                            onChange={handleChange}
+                            size="small"
+                        />
+                    </InputCard>
+
+                    <InputCard label="Time" icon={<AccessTimeIcon fontSize="small" />}>
+                        <TextField
+                            fullWidth
+                            type="time"
+                            variant="outlined"
+                            name="time"
+                            value={formData.time}
+                            onChange={handleChange}
+                            size="small"
+                        />
+                    </InputCard>
+
+                    {/* Row 4 - Full Width */}
+                    <Box sx={{ gridColumn: { md: '1 / -1' } }}>
+                        <InputCard label="Outcome / Notes" icon={<NotesIcon fontSize="small" />}>
+                            <TextField
+                                fullWidth
+                                multiline
+                                rows={3}
+                                variant="outlined"
+                                name="outcome"
+                                value={formData.outcome}
+                                onChange={handleChange}
+                                placeholder="Enter outcome details or notes..."
+                            />
+                        </InputCard>
+                    </Box>
+
+                </Box>
+            </DialogContent>
+
+            <DialogActions sx={{
+                p: 2,
+                px: 3,
+                borderTop: '1px solid',
+                borderColor: 'divider',
+                display: 'flex',
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+                gap: 2
+            }}>
+                <Button
+                    onClick={onClose}
+                    variant="outlined"
+                    sx={{
+                        borderRadius: '8px',
+                        textTransform: 'none',
+                        borderColor: '#D0D5DD',
+                        color: '#344054',
+                        height: 44,
+                        px: 2.5,
+                        fontWeight: 600,
+                        fontSize: '14px',
+                        '&:hover': {
+                            borderColor: '#D0D5DD',
+                            bgcolor: 'rgba(52, 64, 84, 0.04)'
+                        }
+                    }}
+                >
+                    Cancel
+                </Button>
+                <Button
+                    onClick={handleSubmit}
+                    variant="contained"
+                    disableElevation
+                    sx={{
+                        borderRadius: '8px',
+                        bgcolor: '#3D52A0',
+                        textTransform: 'none',
+                        fontFamily: 'Montserrat',
+                        fontWeight: 600,
+                        fontSize: '14px',
+                        height: 44,
+                        px: 2.5,
+                        whiteSpace: 'nowrap',
+                        '&:hover': { bgcolor: '#334485' }
+                    }}
+                >
+                    Save Follow-up
+                </Button>
+            </DialogActions>
+        </Dialog>
+    );
 };
 
 export default FollowupModal;

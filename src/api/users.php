@@ -68,7 +68,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 switch ($method) {
     case 'GET':
-        handleGet($conn);
+        handleGet($conn, $decoded);
         break;
     case 'POST':
         handleUpdate($conn, $decoded);
@@ -85,7 +85,7 @@ switch ($method) {
         break;
 }
 
-function handleGet($conn)
+function handleGet($conn, $decoded)
 {
     $user_guid = $_GET['user_guid'] ?? null;
 
@@ -109,16 +109,58 @@ function handleGet($conn)
         }
         $stmt->close();
     } else {
-        $result = $conn->query("
+        $filter = "";
+        $params = [];
+        $types = "";
+
+        // Admin can only see their own organization's users
+        if (strcasecmp($decoded->role, "Super Admin") !== 0) {
+            $filter = " WHERE u.organization_guid = ?";
+            $params[] = $decoded->organization_guid;
+            $types = "s";
+        } elseif (isset($_GET['role'])) {
+            // Super Admin can filter by role (e.g., ?role=Admin)
+            $filter = " WHERE r.role_name = ?";
+            $params[] = $_GET['role'];
+            $types = "s";
+        }
+
+        $sql = "
             SELECT u.user_guid, u.organization_guid, u.name, u.email, u.role_guid, r.role_name, u.admin_guid, u.status, u.is_active 
             FROM users u
             LEFT JOIN roles r ON u.role_guid = r.role_guid
-        ");
+            $filter
+            ORDER BY u.name ASC
+        ";
+
+        if (!empty($filter)) {
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param($types, ...$params);
+            $stmt->execute();
+            $result = $stmt->get_result();
+        } else {
+            $result = $conn->query($sql);
+        }
+
         $users = [];
         while ($row = $result->fetch_assoc()) {
+            // Fetch organizations created by this user
+            $orgs_stmt = $conn->prepare("SELECT organization_guid FROM `organizations` WHERE `admin_guid` = ?");
+            $orgs_stmt->bind_param("s", $row['user_guid']);
+            $orgs_stmt->execute();
+            $orgs_result = $orgs_stmt->get_result();
+
+            $row['organizations'] = [];
+            while ($org_row = $orgs_result->fetch_assoc()) {
+                $row['organizations'][] = $org_row['organization_guid'];
+            }
+            $orgs_stmt->close();
+
             $users[] = $row;
         }
         echo json_encode(["success" => true, "data" => $users]);
+        if (isset($stmt))
+            $stmt->close();
     }
 }
 
