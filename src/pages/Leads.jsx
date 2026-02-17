@@ -1,239 +1,360 @@
-import { useState, useEffect } from 'react';
-import {
-    Box,
-    Typography,
-    Button,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    TablePagination,
-    Paper,
-    IconButton,
-    Chip,
-} from '@mui/material';
-import {
-    Delete as DeleteIcon,
-    Add as AddIcon,
-    Edit as EditIcon,
-} from '@mui/icons-material';
-import leadsData from '../data/leads.json';
-import LeadForm from '../components/LeadForm';
-import LoadingSpinner from '../components/LoadingSpinner';
-import PageContainer from '../components/PageContainer';
+import { useState, useEffect } from "react";
 
+import {
+  Box,
+  Typography,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TablePagination,
+  Paper,
+  IconButton,
+  Chip,
+  Alert,
+} from "@mui/material";
+
+import {
+  Delete as DeleteIcon,
+  Add as AddIcon,
+  Edit as EditIcon,
+} from "@mui/icons-material";
+
+import LeadForm from "../components/LeadForm";
+import LoadingSpinner from "../components/LoadingSpinner";
+
+const API_URL = "http://localhost/crm/leads.php";
 
 const Leads = () => {
-    const [leads, setLeads] = useState(leadsData);
-    const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [loading, setLoading] = useState(true);
+  const [leads, setLeads] = useState([]);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
-    useEffect(() => {
-        window.scrollTo(0, 0);
-        const timer = setTimeout(() => {
-            const storedLeads = localStorage.getItem('crm_leads');
-            const allLeads = storedLeads ? JSON.parse(storedLeads) : leadsData;
-            setLeads(allLeads);
-            setLoading(false);
-        }, 800);
-        return () => clearTimeout(timer);
-    }, []);
-    const [openDialog, setOpenDialog] = useState(false);
-    const [dialogMode, setDialogMode] = useState('add'); // 'add' or 'edit'
-    const [currentLead, setCurrentLead] = useState({
-        id: null,
-        client_name: '',
-        phone: '',
-        email: '',
-        company: '',
-        source: '',
-        status: '',
-        assigned_to: '',
-        remarks: '',
-    });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-    const handleChangePage = (event, newPage) => {
-        setPage(newPage);
-    };
+  const [openDialog, setOpenDialog] = useState(false);
+  const [dialogMode, setDialogMode] = useState("add");
 
-    const handleChangeRowsPerPage = (event) => {
-        setRowsPerPage(parseInt(event.target.value, 10));
-        setPage(0);
-    };
+  const [currentLead, setCurrentLead] = useState({
+    id: null,
+    client_name: "",
+    phone: "",
+    email: "",
+    company: "",
+    source: "",
+    status: "",
+    assigned_to: "",
+    remarks: "",
+  });
 
-    const handleOpenDialog = (mode, lead = null) => {
-        setDialogMode(mode);
-        if (mode === 'edit' && lead) {
-            setCurrentLead(lead);
-        } else {
-            setCurrentLead({
-                id: null,
-                client_name: '',
-                phone: '',
-                email: '',
-                company: '',
-                source: '',
-                status: '',
-                assigned_to: '',
-                remarks: '',
-            });
-        }
-        setOpenDialog(true);
-    };
+  /* =========================
+       GET TOKEN SAFE
+    ========================= */
 
-    const handleCloseDialog = () => {
-        setOpenDialog(false);
-    };
+  const getToken = () => {
+    const token = localStorage.getItem("token");
 
-    const handleSave = (formData) => {
-        const storedLeads = localStorage.getItem('crm_leads');
-        let allLeads = storedLeads ? JSON.parse(storedLeads) : leadsData;
+    if (!token || token === "null" || token === "undefined") {
+      setError("Invalid token. Please login again.");
 
-        if (dialogMode === 'add') {
-            // Add new lead
-            const newLead = {
-                ...formData,
-                id: allLeads.length > 0 ? Math.max(...allLeads.map(l => l.id)) + 1 : 1,
-            };
-            allLeads = [...allLeads, newLead];
-        } else {
-            // Edit existing lead
-            allLeads = allLeads.map(lead =>
-                lead.id === currentLead.id ? { ...lead, ...formData } : lead
-            );
-        }
-
-        localStorage.setItem('crm_leads', JSON.stringify(allLeads));
-        setLeads(allLeads);
-        handleCloseDialog();
-    };
-
-    const handleDelete = (id) => {
-        if (window.confirm('Are you sure you want to delete this lead?')) {
-            const storedLeads = localStorage.getItem('crm_leads');
-            const allLeads = storedLeads ? JSON.parse(storedLeads) : leadsData;
-            const updatedLeads = allLeads.filter(lead => lead.id !== id);
-
-            localStorage.setItem('crm_leads', JSON.stringify(updatedLeads));
-            setLeads(updatedLeads);
-        }
-    };
-
-    const getStatusColor = (status) => {
-        const statusColors = {
-            'New': 'info',
-            'Contacted': 'primary',
-            'Qualified': 'success',
-            'Proposal Sent': 'warning',
-            'Negotiation': 'secondary',
-            'Closed Won': 'success',
-        };
-        return statusColors[status] || 'default';
-    };
-
-    if (loading) {
-        return <LoadingSpinner loading={true} mode="centered" message="Fetching leads..." />;
+      return null;
     }
 
-    return (
-        <PageContainer
-            title="Leads Management"
-            subtitle="Manage and track all client leads and sales pipeline activities."
-            action={
-                <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => handleOpenDialog('add')}
-                    sx={{ width: { xs: '100%', sm: 'auto' } }}
-                >
-                    Add Lead
-                </Button>
-            }
-        >
-            <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
-                <Table sx={{ minWidth: { xs: 800, md: 'auto' } }}>
-                    <TableHead>
-                        <TableRow sx={{ bgcolor: 'grey.100' }}>
-                            <TableCell sx={{ fontWeight: 600 }}>Client Name</TableCell>
-                            <TableCell sx={{ fontWeight: 600 }}>Phone</TableCell>
-                            <TableCell sx={{ fontWeight: 600 }}>Email</TableCell>
-                            <TableCell sx={{ fontWeight: 600 }}>Company</TableCell>
-                            <TableCell sx={{ fontWeight: 600 }}>Source</TableCell>
-                            <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
-                            <TableCell sx={{ fontWeight: 600 }}>Assigned To</TableCell>
-                            <TableCell sx={{ fontWeight: 600 }}>Remarks</TableCell>
-                            <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {leads
-                            .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                            .map((lead) => (
-                                <TableRow key={lead.id} hover>
-                                    <TableCell>{lead.client_name}</TableCell>
-                                    <TableCell>{lead.phone}</TableCell>
-                                    <TableCell>{lead.email}</TableCell>
-                                    <TableCell>{lead.company}</TableCell>
-                                    <TableCell>{lead.source}</TableCell>
-                                    <TableCell>
-                                        <Chip
-                                            label={lead.status}
-                                            color={getStatusColor(lead.status)}
-                                            size="small"
-                                            sx={{
-                                                fontWeight: 600,
-                                                borderRadius: '6px',
-                                                fontSize: '0.75rem',
-                                                minWidth: '100px', // Consistent width with Dashboard
-                                                justifyContent: 'center'
-                                            }}
-                                        />
-                                    </TableCell>
-                                    <TableCell>{lead.assigned_to}</TableCell>
-                                    <TableCell>{lead.remarks}</TableCell>
-                                    <TableCell>
-                                        <IconButton
-                                            size="small"
-                                            color="primary"
-                                            onClick={() => handleOpenDialog('edit', lead)}
-                                        >
-                                            <EditIcon fontSize="small" />
-                                        </IconButton>
-                                        <IconButton
-                                            size="small"
-                                            color="error"
-                                            onClick={() => handleDelete(lead.id)}
-                                        >
-                                            <DeleteIcon fontSize="small" />
-                                        </IconButton>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-            <TablePagination
-                rowsPerPageOptions={[5, 10, 25]}
-                component="div"
-                count={leads.length}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                onPageChange={handleChangePage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-            />
+    return token;
+  };
 
-            <LeadForm
-                open={openDialog}
-                onClose={handleCloseDialog}
-                onSave={handleSave}
-                initialData={currentLead}
-                mode={dialogMode}
-            />
-        </PageContainer>
-    );
+  /* =========================
+       FETCH LEADS
+    ========================= */
+
+  const fetchLeads = async () => {
+    const token = getToken();
+
+    if (!token) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch(API_URL, {
+        method: "GET",
+
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setLeads(result.data);
+      } else {
+        setError(result.error || "Failed to fetch leads");
+      }
+    } catch (err) {
+      console.error(err);
+
+      setError("Server connection failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLeads();
+  }, []);
+
+  /* =========================
+       OPEN / CLOSE DIALOG
+    ========================= */
+
+  const handleOpenDialog = (mode, lead = null) => {
+    setDialogMode(mode);
+
+    if (mode === "edit" && lead) {
+      setCurrentLead(lead);
+    } else {
+      setCurrentLead({
+        id: null,
+        client_name: "",
+        phone: "",
+        email: "",
+        company: "",
+        source: "",
+        status: "",
+        assigned_to: "",
+        remarks: "",
+      });
+    }
+
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+  };
+
+  /* =========================
+       SAVE LEAD
+    ========================= */
+
+  const handleSave = async (formData) => {
+    const token = getToken();
+
+    if (!token) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const method = dialogMode === "add" ? "POST" : "PUT";
+
+      const bodyData =
+        dialogMode === "add" ? formData : { ...formData, id: currentLead.id };
+
+      const response = await fetch(API_URL, {
+        method: method,
+
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+
+        body: JSON.stringify(bodyData),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        await fetchLeads();
+
+        handleCloseDialog();
+      } else {
+        setError(result.error || "Save failed");
+      }
+    } catch (err) {
+      console.error(err);
+
+      setError("Save failed. Server error.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* =========================
+       DELETE LEAD
+    ========================= */
+
+  const handleDelete = async (id) => {
+    const token = getToken();
+
+    if (!token) return;
+
+    if (!window.confirm("Delete this lead?")) return;
+
+    try {
+      setLoading(true);
+
+      const response = await fetch(API_URL, {
+        method: "DELETE",
+
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+
+        body: JSON.stringify({ id }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        fetchLeads();
+      } else {
+        setError(result.error || "Delete failed");
+      }
+    } catch (err) {
+      setError("Delete failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* =========================
+       STATUS COLOR
+    ========================= */
+
+  const getStatusColor = (status) => {
+    const colors = {
+      New: "info",
+      Contacted: "primary",
+      Qualified: "success",
+      "Proposal Sent": "warning",
+      Negotiation: "secondary",
+      "Closed Won": "success",
+    };
+
+    return colors[status] || "default";
+  };
+
+  /* =========================
+       PAGINATION
+    ========================= */
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  /* =========================
+       UI
+    ========================= */
+
+  return (
+    <Box sx={{ p: 3 }}>
+      {loading && <LoadingSpinner loading={true} />}
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
+      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
+        <Typography variant="h4">Leads Management</Typography>
+
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => handleOpenDialog("add")}
+        >
+          Add Lead
+        </Button>
+      </Box>
+
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Client Name</TableCell>
+              <TableCell>Phone</TableCell>
+              <TableCell>Email</TableCell>
+              <TableCell>Company</TableCell>
+              <TableCell>Source</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Assigned To</TableCell>
+              <TableCell>Remarks</TableCell>
+              <TableCell>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+
+          <TableBody>
+            {leads
+              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              .map((lead) => (
+                <TableRow key={lead.id}>
+                  <TableCell>{lead.client_name}</TableCell>
+                  <TableCell>{lead.phone}</TableCell>
+                  <TableCell>{lead.email}</TableCell>
+                  <TableCell>{lead.company}</TableCell>
+                  <TableCell>{lead.source}</TableCell>
+
+                  <TableCell>
+                    <Chip
+                      label={lead.status}
+                      color={getStatusColor(lead.status)}
+                    />
+                  </TableCell>
+
+                  <TableCell>{lead.assigned_name}</TableCell>
+
+                  <TableCell>{lead.remarks}</TableCell>
+
+                  <TableCell>
+                    <IconButton onClick={() => handleOpenDialog("edit", lead)}>
+                      <EditIcon />
+                    </IconButton>
+
+                    <IconButton
+                      color="error"
+                      onClick={() => handleDelete(lead.id)}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      <TablePagination
+        rowsPerPageOptions={[5, 10, 25]}
+        count={leads.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+      />
+
+      <LeadForm
+        open={openDialog}
+        onClose={handleCloseDialog}
+        onSave={handleSave}
+        initialData={currentLead}
+        mode={dialogMode}
+      />
+    </Box>
+  );
 };
 
 export default Leads;
