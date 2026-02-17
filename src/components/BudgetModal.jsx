@@ -134,8 +134,8 @@ const BudgetModal = ({ open, onClose, onSave, budget }) => {
         {loadingLeads ? (
           <p>Loading leads...</p>
         ) : (
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
+          <Grid container spacing={2} width={"100%"}>
+            <Grid item xs={12} width={{ xs: "100%", sm: "44.5%" }}>
               <TextField
                 select
                 fullWidth
@@ -153,7 +153,7 @@ const BudgetModal = ({ open, onClose, onSave, budget }) => {
               </TextField>
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={6} width={{ xs: "100%", sm: "44.5%" }}>
               <TextField
                 fullWidth
                 label="Estimated Amount"
@@ -169,7 +169,7 @@ const BudgetModal = ({ open, onClose, onSave, budget }) => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={6} width={{ xs: "100%", sm: "44.5%" }}>
               <TextField
                 fullWidth
                 label="Discount"
@@ -185,7 +185,7 @@ const BudgetModal = ({ open, onClose, onSave, budget }) => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={6} width={{ xs: "100%", sm: "44.5%" }}>
               <TextField
                 fullWidth
                 label="Final Amount"
@@ -201,7 +201,7 @@ const BudgetModal = ({ open, onClose, onSave, budget }) => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={6} width={{ xs: "100%", sm: "44.5%" }}>
               <TextField
                 select
                 fullWidth
