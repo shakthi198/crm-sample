@@ -38,18 +38,6 @@ use Firebase\JWT\Key;
    DB CONNECTION
 ========================= */
 
-$conn = new mysqli("localhost", "root", "", "crm_sample");
-
-if ($conn->connect_error) {
-
-    echo json_encode([
-        "success" => false,
-        "error" => "Database connection failed",
-        "details" => $conn->connect_error
-    ]);
-
-    exit;
-}
 
 
 /* =========================

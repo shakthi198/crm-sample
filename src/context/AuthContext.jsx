@@ -31,6 +31,7 @@ export const AuthProvider = ({ children }) => {
                 };
                 setUser(newUser);
                 localStorage.setItem('crm_user', JSON.stringify(newUser));
+                localStorage.setItem('token',newUser.token);
                 return true;
             } else {
                 throw new Error(data.error || 'Login failed');
@@ -43,6 +44,7 @@ export const AuthProvider = ({ children }) => {
 
     const logout = () => {
         localStorage.removeItem('crm_user');
+        localStorage.removeItem('token');
         setUser(null);
     };
 
@@ -51,6 +53,7 @@ export const AuthProvider = ({ children }) => {
         const updatedUser = { ...user, role: newRole };
         setUser(updatedUser);
         localStorage.setItem('crm_user', JSON.stringify(updatedUser));
+        localStorage.setItem('token', updatedUser.token);
     };
 
     const hasPermission = (permission) => {
@@ -79,6 +82,7 @@ export const AuthProvider = ({ children }) => {
         const newUser = { ...user, ...updatedData };
         setUser(newUser);
         localStorage.setItem('crm_user', JSON.stringify(newUser));
+        localStorage.setItem('token', newUser.token);
         return true;
     };
 

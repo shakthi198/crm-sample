@@ -58,7 +58,7 @@ const Leads = () => {
 
     const getToken = () => {
         // Prioritize crm_token as it's the one set by AuthContext
-        const token = localStorage.getItem("crm_token") || localStorage.getItem("token");
+        const token =localStorage.getItem("token");
 
         if (!token || token === "null" || token === "undefined") {
             return null;
@@ -73,6 +73,7 @@ const Leads = () => {
 
     const fetchLeads = async () => {
         const token = getToken();
+        console.log("Fetching leads with token:", token);
 
         if (!token) return;
 
