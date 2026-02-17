@@ -28,6 +28,7 @@ import ClientFormModal from "../components/ClientFormModal";
 import ClientDetailsModal from "../components/ClientDetailsModal";
 import LoadingSpinner from "../components/LoadingSpinner";
 import PageContainer from "../components/PageContainer";
+import apiEndpoints from "../apiconfig";
 
 // --- CURRENT USER SIMULATION (CHANGE THIS TO TEST DIFFERENT ROLES) ---
 const currentUser = {
@@ -70,7 +71,7 @@ const fetchClients = async () => {
   try {
     const token = localStorage.getItem("token");
 
-    const res = await fetch("http://localhost/crm/clients_page.php", {
+    const res = await fetch(`${apiEndpoints.clients}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -89,7 +90,7 @@ const fetchClients = async () => {
 };
  const fetchLeads = async () => {
    try {
-     const res = await fetch("http://localhost/crm/dropdown.php?table=leads");
+     const res = await fetch(`${apiEndpoints.dropdown}?table=leads`);
      const data = await res.json();
 
      if (data.success) {
@@ -153,7 +154,7 @@ const handleSave = async (formData) => {
   }
 
   try {
-    const res = await fetch("http://localhost/crm/clients_page.php", {
+    const res = await fetch(`${apiEndpoints.clients}`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -179,7 +180,7 @@ const handleDelete = async (client_guid) => {
 
   if (!window.confirm("Delete this client?")) return;
 
-  const res = await fetch("http://localhost/crm/clients_page.php", {
+  const res = await fetch(`${apiEndpoints.clients}`, {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
