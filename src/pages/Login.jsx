@@ -20,7 +20,7 @@ import {
     Layers as LogoIcon
 } from '@mui/icons-material'
 import { useAuth } from '../context/AuthContext'
-import usersData from '../data/users.json'
+
 import LoadingSpinner from '../components/LoadingSpinner'
 
 const Login = () => {
@@ -69,24 +69,15 @@ const Login = () => {
         setIsLoading(true)
         setErrorMsg('')
 
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 800))
-
-        const user = usersData.find(
-            (u) => (u.email === username || u.name === username) && u.password === password
-        )
-
-        if (user) {
-            try {
-                await login(user.email, user.password)
-                navigate('/dashboard')
-            } catch (error) {
-                console.error("Login failed:", error)
-                setErrorMsg('Authentication failed. Check console.')
-                setIsLoading(false)
-            }
-        } else {
-            setErrorMsg('Invalid credentials. Please try again.')
+        try {
+            // Real API Login
+            await login(username, password)
+            navigate('/dashboard')
+        } catch (error) {
+            console.error("Login failed:", error)
+            // Error message from API or generic
+            const msg = error.response?.data?.error || error.message || 'Authentication failed. Please check credentials.'
+            setErrorMsg(msg)
             setIsLoading(false)
         }
     }

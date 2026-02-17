@@ -1,34 +1,53 @@
 import React, { createContext, useContext, useState } from 'react';
+import apiEndpoints from '../apiconfig';
 
+const BASE_URL = apiEndpoints.baseUrl;
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    // Roles: 'Super Admin', 'Manager', 'Finance', 'Telecaller'
+    // Roles: 'Super Admin', 'Manager', 'Finance', 'Telecaller', 'Admin'
     const [user, setUser] = useState(() => {
         const savedUser = localStorage.getItem('crm_user');
         return savedUser ? JSON.parse(savedUser) : null;
     });
 
-    const login = (email, password) => {
-        // In a real app, validate credentials here.
-        // For now, we simulate a successful login.
-        const newUser = {
-            name: email.split('@')[0] || 'Admin User',
-            email: email,
-            role: 'Super Admin',
-            organizationId: 'ORG-123'
-        };
-        setUser(newUser);
-        localStorage.setItem('crm_user', JSON.stringify(newUser));
-        return true;
+    const login = async (email, password) => {
+        try {
+            const response = await fetch(apiEndpoints.login, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: email, password: password })
+            });
+            const data = await response.json();
+
+            if (data.success && data.token) {
+                // Backend returns flat structure: { success, token, role, username, permissions }
+                const newUser = {
+                    name: data.username,
+                    email: email,
+                    role: data.role,
+                    token: data.token,
+                    permissions: data.permissions || []
+                };
+                setUser(newUser);
+                localStorage.setItem('crm_user', JSON.stringify(newUser));
+                return true;
+            } else {
+                throw new Error(data.error || 'Login failed');
+            }
+        } catch (error) {
+            console.error("Login error:", error);
+            throw error;
+        }
     };
 
     const logout = () => {
-        setUser(null);
         localStorage.removeItem('crm_user');
+        setUser(null);
     };
 
     const switchRole = (newRole) => {
+        // This might be debug only or specific feature
         const updatedUser = { ...user, role: newRole };
         setUser(updatedUser);
         localStorage.setItem('crm_user', JSON.stringify(updatedUser));
@@ -36,15 +55,20 @@ export const AuthProvider = ({ children }) => {
 
     const hasPermission = (permission) => {
         if (!user) return false;
-        if (user.role === 'Super Admin') return true;
 
+        // Admins have access to everything
+        if (user.role === 'Super Admin' || user.role === 'Admin') return true;
+
+        // Check if permission is a module name (e.g., 'Dashboard', 'Leads')
+        const modulePerm = user.permissions?.find(p => p.module.toLowerCase() === permission.toLowerCase());
+        if (modulePerm) {
+            return parseInt(modulePerm.view) === 1 || parseInt(modulePerm.full_access) === 1;
+        }
+
+        // Specific action checks can be added here if needed
         switch (permission) {
             case 'approve_budget':
                 return ['Manager', 'Finance'].includes(user.role);
-            case 'edit_budget':
-                return ['Manager', 'Finance', 'Telecaller'].includes(user.role);
-            case 'finalize_budget':
-                return ['Finance'].includes(user.role);
             default:
                 return false;
         }
