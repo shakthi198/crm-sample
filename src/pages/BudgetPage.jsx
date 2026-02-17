@@ -13,6 +13,7 @@ import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import PendingIcon from "@mui/icons-material/Pending";
 import CancelIcon from "@mui/icons-material/Cancel";
+import apiEndpoints from "../apiconfig/index.jsx";
 const BudgetPage = () => {
   const theme = useTheme();
   const { hasPermission } = useAuth();
@@ -30,13 +31,12 @@ const BudgetPage = () => {
   });
   // :wrench: Get token from localStorage with fallback
   const token =
-    localStorage.getItem("token") ||
-    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3NzA4MDM4NDYsIm9yZ2FuaXphdGlvbl9ndWlkIjoiNDljNGMxMjItMDcxOC0xMWYxLTljNDItZTIxYWQ4ZjAyYjA0IiwiYWRtaW5fZ3VpZCI6IjQ5YzRjMWM2LTA3MTgtMTFmMS05YzQyLWUyMWFkOGYwMmIwNCIsInVzZXJuYW1lIjoiYWRtaW4iLCJyb2xlIjoiQWRtaW4iLCJpc19hY3RpdmUiOjF9.haZqmTOMh4bBXS-3AhsCGxtfAqmTAm_pZqeA14o2izc";
+    localStorage.getItem("crm_token");
   const fetchBudgets = async () => {
     try {
       setLoading(true);
       const res = await fetch(
-        "http://localhost/crm/budget.php",
+        apiEndpoints.budget,
         {
           method: "GET",
           headers: {
@@ -101,7 +101,7 @@ const BudgetPage = () => {
     const method = budgetData.budget_guid ? "PUT" : "POST";
     try {
       const res = await fetch(
-        "http://localhost/crm/budget.php",
+        apiEndpoints.budget,
         {
           method,
           headers: {
@@ -151,7 +151,7 @@ const BudgetPage = () => {
     };
     try {
       const res = await fetch(
-        "http://localhost/crm/budget.php",
+        apiEndpoints.budget,
         {
           method: "PUT",
           headers: {

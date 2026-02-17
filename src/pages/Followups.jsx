@@ -37,6 +37,7 @@ const USERS_API_URL = apiEndpoints.users;
 const Followups = () => {
     const { user } = useAuth();
     const token = user?.token;
+    console.log("Followups component - User:", token);
     // Initialize with empty array
     const [followups, setFollowups] = useState([]);
     const [page, setPage] = useState(0);
