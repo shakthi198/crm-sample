@@ -183,49 +183,31 @@ function getBudgets($conn, $organization_guid)
 function resolveLeadGuid($conn, $organization_guid, $data)
 {
     $lead_guid = trim((string)($data['lead_guid'] ?? ''));
-    $lead_name = trim((string)($data['lead_name'] ?? ''));
 
-    if ($lead_guid !== '') {
-        $sql = "
-            SELECT lead_guid
-            FROM leads
-            WHERE lead_guid = ?
-              AND organization_guid = ?
-            LIMIT 1
-        ";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ss", $lead_guid, $organization_guid);
-        $stmt->execute();
-        $res = $stmt->get_result();
-
-        if ($res->num_rows > 0) {
-            return [$lead_guid, null];
-        }
+    if ($lead_guid === '') {
+        return [null, 'lead_guid required'];
     }
 
-    if ($lead_name !== '') {
-        $sql = "
-            SELECT lead_guid
-            FROM leads
-            WHERE organization_guid = ?
-              AND client_name = ?
-            LIMIT 1
-        ";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ss", $organization_guid, $lead_name);
-        $stmt->execute();
-        $res = $stmt->get_result();
-        $row = $res->fetch_assoc();
+    // Just verify lead exists (no name logic)
+    $sql = "
+        SELECT lead_guid
+        FROM leads
+        WHERE lead_guid = ?
+        LIMIT 1
+    ";
 
-        if ($row && !empty($row['lead_guid'])) {
-            return [$row['lead_guid'], null];
-        }
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $lead_guid);
+    $stmt->execute();
+    $res = $stmt->get_result();
 
-        return [null, 'Lead name not found in this organization'];
+    if ($res->num_rows === 0) {
+        return [null, 'Invalid lead_guid'];
     }
 
-    return [null, 'lead_name or lead_guid required'];
+    return [$lead_guid, null];
 }
+
 
 function createBudget($conn, $organization_guid, $user_guid, $data)
 {
@@ -245,6 +227,7 @@ function createBudget($conn, $organization_guid, $user_guid, $data)
     $budget_guid = uuidv4();
     $estimated_amount = floatval($data['estimated_amount']);
     $discount = isset($data['discount']) ? floatval($data['discount']) : 0.00;
+    $final_amount = $estimated_amount - $discount;
     $statusInput = trim((string)($data['status'] ?? 'Pending'));
     $status = ucfirst(strtolower($statusInput));
     if (!in_array($status, ['Pending', 'Approved', 'Rejected'], true)) {
@@ -254,21 +237,21 @@ function createBudget($conn, $organization_guid, $user_guid, $data)
 
     $sql = "
         INSERT INTO budgets
-        (budget_guid, organization_guid, lead_guid, estimated_amount, discount, status, is_active, admin_guid)
+        (budget_guid, organization_guid, lead_guid, estimated_amount, discount, final_amount, status, is_active)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ";
 
     $stmt = $conn->prepare($sql);
     $stmt->bind_param(
-        "sssddsis",
+        "sssdddsi",
         $budget_guid,
         $organization_guid,
         $lead_guid,
         $estimated_amount,
         $discount,
+        $final_amount,
         $status,
         $is_active,
-        $user_guid
     );
 
     if ($stmt->execute()) {
@@ -292,7 +275,7 @@ function updateBudget($conn, $organization_guid, $user_guid, $data)
     }
 
     $checkSql = "
-        SELECT id FROM budgets
+        SELECT * FROM budgets
         WHERE budget_guid = ?
           AND organization_guid = ?
           AND is_active = 1
@@ -331,22 +314,21 @@ function updateBudget($conn, $organization_guid, $user_guid, $data)
             lead_guid = ?,
             estimated_amount = ?,
             discount = ?,
+            final_amount = (estimated_amount - discount),
             status = ?,
-            is_active = ?,
-            admin_guid = ?
+            is_active = ?
         WHERE budget_guid = ?
           AND organization_guid = ?
     ";
 
     $stmt = $conn->prepare($sql);
     $stmt->bind_param(
-        "sddsisss",
+        "sddsiss",
         $lead_guid,
         $estimated_amount,
         $discount,
         $status,
         $is_active,
-        $user_guid,
         $data['budget_guid'],
         $organization_guid
     );

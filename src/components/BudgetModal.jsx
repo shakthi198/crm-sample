@@ -6,14 +6,77 @@ import {
   DialogActions,
   Button,
   TextField,
-  Grid,
   MenuItem,
   InputAdornment,
+  Typography,
+  Box,
+  IconButton,
+  useTheme,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
+import CloseIcon from "@mui/icons-material/Close";
+import PersonIcon from "@mui/icons-material/Person";
+import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import CalculateIcon from "@mui/icons-material/Calculate";
+import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
+
+
+const InputCard = React.memo(({ label, icon, children }) => {
+  const theme = useTheme();
+
+  return (
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        gap: 1.5,
+        p: 2,
+        border: "1px solid",
+        borderColor: "divider",
+        borderRadius: "12px",
+        bgcolor: "background.paper",
+        transition: "all 0.2s",
+        boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
+        "&:hover": {
+          borderColor: theme.palette.primary.main,
+          boxShadow: "0 4px 12px rgba(61, 82, 160, 0.08)",
+        },
+      }}
+    >
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Box
+          sx={{
+            color: theme.palette.primary.main,
+            display: "flex",
+            alignItems: "center",
+            bgcolor: alpha(theme.palette.primary.main, 0.1),
+            p: 0.5,
+            borderRadius: "6px",
+          }}
+        >
+          {React.cloneElement(icon, { fontSize: "small" })}
+        </Box>
+        <Typography
+          variant="caption"
+          fontWeight={600}
+          color="text.secondary"
+          sx={{ textTransform: "uppercase", letterSpacing: "0.05em" }}
+        >
+          {label}
+        </Typography>
+      </Box>
+
+      <Box sx={{ flexGrow: 1 }}>{children}</Box>
+    </Box>
+  );
+});
+
 
 const BudgetModal = ({ open, onClose, onSave, budget }) => {
   // const token = localStorage.getItem('token'); // Removed insecure token access
-
+    const theme = useTheme();
   const [leads, setLeads] = useState([]);
   const [loadingLeads, setLoadingLeads] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -30,37 +93,17 @@ const BudgetModal = ({ open, onClose, onSave, budget }) => {
     if (!open) return;
 
     const fetchLeads = async () => {
-      setLoadingLeads(true);
-      const token =
-        localStorage.getItem("token") ||
-        "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3NzA4MDM4NDYsIm9yZ2FuaXphdGlvbl9ndWlkIjoiNDljNGMxMjItMDcxOC0xMWYxLTljNDItZTIxYWQ4ZjAyYjA0IiwiYWRtaW5fZ3VpZCI6IjQ5YzRjMWM2LTA3MTgtMTFmMS05YzQyLWUyMWFkOGYwMmIwNCIsInVzZXJuYW1lIjoiYWRtaW4iLCJyb2xlIjoiQWRtaW4iLCJpc19hY3RpdmUiOjF9.haZqmTOMh4bBXS-3AhsCGxtfAqmTAm_pZqeA14o2izc";
-      localStorage.setItem("token", token);
-
       try {
         const res = await fetch(
-          "http://localhost/crm/CRM_system/api/leads.php",
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          },
+          "http://localhost/crm/dropdown.php?table=leads",
         );
+        const data = await res.json();
 
-        if (!res.ok) throw new Error("Leads fetch failed");
-
-        const data = await res.json().catch(() => null);
-        if (data && data.success && Array.isArray(data.data)) {
+        if (data.success) {
           setLeads(data.data);
-        } else {
-          setLeads([]);
         }
       } catch (err) {
-        console.error("Failed to fetch leads:", err);
-        setLeads([]);
-      } finally {
-        setLoadingLeads(false);
+        console.error(err);
       }
     };
 
@@ -127,16 +170,58 @@ const BudgetModal = ({ open, onClose, onSave, budget }) => {
     }
   };
 
+
+
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{budget ? "Edit Budget" : "Add New Budget"}</DialogTitle>
-      <DialogContent dividers>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: "16px",
+          width: "100%",
+          maxWidth: "840px",
+          boxShadow: "0 24px 48px rgba(0,0,0,0.2)",
+        },
+      }}
+    >
+      <DialogTitle
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          px: 4,
+          py: 2.5,
+          borderBottom: "1px solid",
+          borderColor: "divider",
+          bgcolor: "background.paper",
+        }}
+      >
+        <Typography
+          variant="h5"
+          fontWeight={700}
+          sx={{ fontFamily: "Montserrat" }}
+        >
+          {budget ? "Edit Budget" : "Add New Budget"}
+        </Typography>
+        <IconButton
+          onClick={onClose}
+          size="small"
+          sx={{ bgcolor: "action.hover" }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent dividers sx={{ p: 4, bgcolor: "#f8f9fc" }}>
         {loadingLeads ? (
           <p>Loading leads...</p>
         ) : (
-          <Grid container spacing={2} width={"100%"}>
-            <Grid item xs={12} width={{ xs: "100%", sm: "44.5%" }}>
-              <TextField
+           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
+                             {/* Row 1 */}
+                             <InputCard label="Lead Name" icon={<PersonIcon />}>
+                                  <TextField
                 select
                 fullWidth
                 label="Select Lead"
@@ -146,15 +231,15 @@ const BudgetModal = ({ open, onClose, onSave, budget }) => {
                 autoFocus
               >
                 {leads.map((lead) => (
-                  <MenuItem key={lead.lead_guid} value={lead.lead_guid}>
-                    {lead.lead_name}
+                  <MenuItem key={lead.id} value={lead.id}>
+                    {lead.name}
                   </MenuItem>
                 ))}
               </TextField>
-            </Grid>
-
-            <Grid item xs={12} sm={6} width={{ xs: "100%", sm: "44.5%" }}>
-              <TextField
+                             </InputCard>
+         
+                             <InputCard label="Estimated Amount" icon={<MonetizationOnIcon />}>
+                                  <TextField
                 fullWidth
                 label="Estimated Amount"
                 name="estimated_amount"
@@ -167,10 +252,11 @@ const BudgetModal = ({ open, onClose, onSave, budget }) => {
                   ),
                 }}
               />
-            </Grid>
-
-            <Grid item xs={12} sm={6} width={{ xs: "100%", sm: "44.5%" }}>
-              <TextField
+                             </InputCard>
+         
+                             {/* Row 2 */}
+                             <InputCard label="Discount" icon={<LocalOfferIcon />}>
+                              <TextField
                 fullWidth
                 label="Discount"
                 name="discount"
@@ -183,10 +269,10 @@ const BudgetModal = ({ open, onClose, onSave, budget }) => {
                   ),
                 }}
               />
-            </Grid>
-
-            <Grid item xs={12} sm={6} width={{ xs: "100%", sm: "44.5%" }}>
-              <TextField
+                             </InputCard>
+         
+                             <InputCard label="Final Amount" icon={<CalculateIcon />}>
+                                <TextField
                 fullWidth
                 label="Final Amount"
                 value={formData.final_amount}
@@ -199,10 +285,11 @@ const BudgetModal = ({ open, onClose, onSave, budget }) => {
                 }}
                 variant="filled"
               />
-            </Grid>
-
-            <Grid item xs={12} sm={6} width={{ xs: "100%", sm: "44.5%" }}>
-              <TextField
+                             </InputCard>
+         
+                             {/* Row 3 */}
+                             <InputCard label="Status" icon={<AssignmentTurnedInIcon />}>
+                                <TextField
                 select
                 fullWidth
                 label="Status"
@@ -214,24 +301,64 @@ const BudgetModal = ({ open, onClose, onSave, budget }) => {
                 <MenuItem value="Approved">Approved</MenuItem>
                 <MenuItem value="Rejected">Rejected</MenuItem>
               </TextField>
-            </Grid>
-          </Grid>
+                             </InputCard>
+         
+                             {/* Empty placeholder for alignment */}
+                             <Box sx={{ display: { xs: 'none', md: 'block' } }} />
+                         </Box>
         )}
-      </DialogContent>
-
-      <DialogActions sx={{ p: 2.5 }}>
-        <Button onClick={onClose} color="inherit" disabled={saving}>
-          Cancel
-        </Button>
-        <Button
-          onClick={handleSubmit}
-          variant="contained"
-          color="primary"
-          disabled={saving}
-        >
-          {budget ? "Update Budget" : "Create Budget"}
-        </Button>
-      </DialogActions>
+                     </DialogContent>
+         
+                     <DialogActions sx={{
+                         p: 2,
+                         px: 3,
+                         borderTop: '1px solid',
+                         borderColor: 'divider',
+                         display: 'flex',
+                         justifyContent: 'flex-end',
+                         alignItems: 'center',
+                         gap: 2
+                     }}>
+                         <Button
+                             onClick={onClose}
+                             variant="outlined"
+                             sx={{
+                                 borderRadius: '8px',
+                                 textTransform: 'none',
+                                 borderColor: '#D0D5DD',
+                                 color: '#344054',
+                                 height: 44,
+                                 px: 2.5,
+                                 fontWeight: 600,
+                                 fontSize: '14px',
+                                 '&:hover': {
+                                     borderColor: '#D0D5DD',
+                                     bgcolor: 'rgba(52, 64, 84, 0.04)'
+                                 }
+                             }}
+                         >
+                             Cancel
+                         </Button>
+                         <Button
+                             onClick={handleSubmit}
+                             variant="contained"
+                             disableElevation
+                             sx={{
+                                 borderRadius: '8px',
+                                 bgcolor: '#3D52A0',
+                                 textTransform: 'none',
+                                 fontFamily: 'Montserrat',
+                                 fontWeight: 600,
+                                 fontSize: '14px',
+                                 height: 44,
+                                 px: 2.5,
+                                 whiteSpace: 'nowrap',
+                                 '&:hover': { bgcolor: '#334485' }
+                             }}
+                         >
+                             {budget ? 'Update Budget' : 'Create Budget'}
+                         </Button>
+                     </DialogActions>
     </Dialog>
   );
 };
