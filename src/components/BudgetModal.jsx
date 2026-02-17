@@ -95,7 +95,7 @@ const BudgetModal = ({ open, onClose, onSave, budget }) => {
     const fetchLeads = async () => {
       try {
         const res = await fetch(
-          "http://localhost/crm/dropdown.php?table=leads",
+          "http://localhost/crm/api/dropdown.php?table=leads",
         );
         const data = await res.json();
 
