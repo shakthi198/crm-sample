@@ -30,90 +30,96 @@ import PageContainer from '../components/PageContainer';
 import DataTableCard from '../components/DataTableCard';
 import AddRoleModal from '../components/AddRoleModal';
 import ConfirmationDialog from '../components/ConfirmationDialog'; // Assuming this exists based on Users.jsx
-
-// Default Roles Data
-const DEFAULT_ROLES = [
-    {
-        id: 1,
-        name: 'Super Admin',
-        description: 'Access to all organizations and modules',
-        permissions: ['Organization', 'Users', 'Leads', 'Clients', 'Budgets', 'Reports', 'Settings'],
-        usersCount: 2,
-        isSystem: true // Prevent deletion of system roles
-    },
-    {
-        id: 2,
-        name: 'Admin',
-        description: 'Manage leads and team within own organization',
-        permissions: ['Users', 'Leads', 'Clients', 'Reports'],
-        usersCount: 5,
-        isSystem: true
-    },
-    {
-        id: 3,
-        name: 'Manager',
-        description: 'Approve budgets',
-        permissions: ['Leads', 'Budgets', 'Reports'],
-        usersCount: 8,
-        isSystem: false
-    },
-    {
-        id: 4,
-        name: 'Telecaller',
-        description: 'Manage assigned leads only',
-        permissions: ['Assigned Leads', 'Followups'],
-        usersCount: 12,
-        isSystem: false
-    },
-    {
-        id: 5,
-        name: 'Finance',
-        description: 'Approve budget finalization',
-        permissions: ['Budgets', 'Reports'],
-        usersCount: 3,
-        isSystem: false
-    }
-];
-
-const ROLES_STORAGE_KEY = 'crm_roles_data';
+import apiEndpoints from '../apiconfig';
+const BASE_URL = apiEndpoints.roles;
 
 const Roles = () => {
     const theme = useTheme();
 
+    const getHeaders = () => {
+        const savedUser = localStorage.getItem('crm_user');
+        let headers = { 'Content-Type': 'application/json' };
+        if (savedUser) {
+            const u = JSON.parse(savedUser);
+            if (u && u.token) headers['Authorization'] = `Bearer ${u.token}`;
+        }
+        return headers;
+    };
+
     // State
-    const [roles, setRoles] = useState(() => {
-        const saved = localStorage.getItem(ROLES_STORAGE_KEY);
-        return saved ? JSON.parse(saved) : DEFAULT_ROLES;
-    });
+    const [roles, setRoles] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     const [openRoleModal, setOpenRoleModal] = useState(false);
     const [editRole, setEditRole] = useState(null);
     const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
     const [roleToDelete, setRoleToDelete] = useState(null);
 
-    // Persist roles
+    // Initial Load
     useEffect(() => {
-        localStorage.setItem(ROLES_STORAGE_KEY, JSON.stringify(roles));
-    }, [roles]);
+        loadRoles();
+    }, []);
+
+    const loadRoles = async () => {
+        setLoading(true);
+        try {
+            const response = await fetch(apiEndpoints.roles, { headers: getHeaders() });
+            const data = await response.json();
+            if (data.success && Array.isArray(data.data)) {
+                const mappedRoles = data.data.map(r => ({
+                    id: r.role_guid, // Use guid as ID for frontend keys
+                    role_guid: r.role_guid,
+                    name: r.role_name,
+                    role_name: r.role_name,
+                    description: r.description,
+                    isSystem: r.is_system == 1,
+                    is_active: r.is_active,
+                    permissions: r.permissions ? r.permissions.map(p => p.module) : [], // extracting module names for display
+                    rawPermissions: r.permissions // keep raw for editing if needed
+                }));
+                setRoles(mappedRoles);
+            }
+        } catch (err) {
+            console.error("Failed to load roles", err);
+            setError("Failed to load roles");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Handle Add or Update Role
-    const handleSaveRole = (roleData) => {
-        if (roleData.id) {
-            // Update existing role
-            setRoles(prevRoles => prevRoles.map(role =>
-                role.id === roleData.id ? { ...role, ...roleData } : role
-            ));
-        } else {
-            // Add new role
-            const newRole = {
-                id: Date.now(),
-                ...roleData,
-                isSystem: false
+    const handleSaveRole = async (roleData) => {
+        try {
+            const apiData = {
+                role_name: roleData.name,
+                description: roleData.description,
+                is_active: 1, // Defaulting to active
+                permissions: roleData.permissions
             };
-            setRoles([...roles, newRole]);
+
+            if (editRole) {
+                // Update
+                await fetch(apiEndpoints.roles, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ ...apiData, role_guid: editRole.role_guid })
+                });
+            } else {
+                // Create
+                await fetch(apiEndpoints.roles, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify(apiData)
+                });
+            }
+            loadRoles();
+            setOpenRoleModal(false);
+            setEditRole(null);
+        } catch (err) {
+            console.error("Failed to save role", err);
+            alert("Failed to save role");
         }
-        setOpenRoleModal(false);
-        setEditRole(null);
     };
 
     const handleAddClick = () => {
@@ -132,9 +138,35 @@ const Roles = () => {
         setOpenDeleteConfirm(true);
     };
 
-    const confirmDelete = () => {
+    const confirmDelete = async () => {
         if (roleToDelete) {
-            setRoles(roles.filter(r => r.id !== roleToDelete.id));
+            try {
+                const response = await fetch(apiEndpoints.roles + `?role_guid=${roleToDelete.role_guid}`, {
+                    method: 'DELETE',
+                    headers: getHeaders()
+                });
+
+                const responseText = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (parseError) {
+                    console.error("Malformed JSON response from server:", responseText);
+                    alert("The server returned an invalid response. Please check the console for details.");
+                    setRoleToDelete(null);
+                    setOpenDeleteConfirm(false);
+                    return;
+                }
+
+                if (data.success) {
+                    loadRoles();
+                } else {
+                    alert(data.error || "Failed to delete role");
+                }
+            } catch (err) {
+                console.error("Failed to delete role", err);
+                alert("An unexpected error occurred while deleting the role");
+            }
             setRoleToDelete(null);
             setOpenDeleteConfirm(false);
         }
@@ -198,7 +230,7 @@ const Roles = () => {
                         <Button
                             variant="outlined"
                             startIcon={<AddIcon />}
-                            onClick={() => setOpenAddModal(true)}
+                            onClick={() => setOpenRoleModal(true)}
                         >
                             Create First Role
                         </Button>
