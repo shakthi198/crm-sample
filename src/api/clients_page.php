@@ -99,7 +99,7 @@ if ($method === 'GET') {
             c.is_active,
 
             l.client_name,
-            l.company_name,
+            l.company,
             l.phone,
             l.email,  
             l.status,
@@ -211,8 +211,8 @@ if ($method === 'POST') {
         }
     }
 
-    $stmt = $conn->prepare("INSERT INTO clients (client_guid, organization_guid, lead_guid, contract_file, start_date, admin_guid) VALUES (?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssssss", $client_guid, $organization_guid, $lead_guid, $contract_path, $start_date, $admin_guid);
+    $stmt = $conn->prepare("INSERT INTO clients (client_guid, organization_guid, lead_guid, contract_file, start_date) VALUES (?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssss", $client_guid, $organization_guid, $lead_guid, $contract_path, $start_date);
 
     if ($stmt->execute()) {
         echo json_encode(["success" => true, "message" => "Client created successfully", "client_guid" => $client_guid]);

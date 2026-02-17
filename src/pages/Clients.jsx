@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -12,8 +12,8 @@ import {
   Paper,
   IconButton,
   Chip,
-  Snackbar,
   Alert,
+  Snackbar,
   TablePagination,
 } from "@mui/material";
 import {
@@ -21,189 +21,182 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Visibility as ViewIcon,
-  Download as DownloadIcon,
 } from "@mui/icons-material";
-
+import clientsData from "../data/clients.json";
+import leadsData from "../data/leads.json";
 import ClientFormModal from "../components/ClientFormModal";
 import ClientDetailsModal from "../components/ClientDetailsModal";
 import LoadingSpinner from "../components/LoadingSpinner";
+import PageContainer from "../components/PageContainer";
 
-const API_URL = "http://localhost/crm/clients_page.php";
-const LEADS_API_URL = "http://localhost/crm/leads_page.php";
-const BASE_URL = "http://localhost/crm/";
-
-//  MANUAL TOKEN
-const token =
-  "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3NzA4MDM4NDYsIm9yZ2FuaXphdGlvbl9ndWlkIjoiNDljNGMxMjItMDcxOC0xMWYxLTljNDItZTIxYWQ4ZjAyYjA0IiwiYWRtaW5fZ3VpZCI6IjQ5YzRjMWM2LTA3MTgtMTFmMS05YzQyLWUyMWFkOGYwMmIwNCIsInVzZXJuYW1lIjoiYWRtaW4iLCJyb2xlIjoiQWRtaW4iLCJpc19hY3RpdmUiOjF9.haZqmTOMh4bBXS-3AhsCGxtfAqmTAm_pZqeA14o2izc";
-
-// const token = localStorage.getItem("token");
+// --- CURRENT USER SIMULATION (CHANGE THIS TO TEST DIFFERENT ROLES) ---
+const currentUser = {
+  id: 2,
+  name: "Admin User",
+  email: "admin@crm.com",
+  role: "Admin", // Change to "Super Admin", "Finance", "Manager", "Telecaller" to test
+  organization_id: "ORG001",
+};
+// ---------------------------------------------------------------------
 
 const Clients = () => {
+  const [clients, setClients] = useState(clientsData);
   const [leads, setLeads] = useState([]);
-
-  const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
+  // Dialog State
   const [openDialog, setOpenDialog] = useState(false);
   const [openViewDialog, setOpenViewDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState("add");
   const [currentClient, setCurrentClient] = useState(null);
   const [viewClient, setViewClient] = useState(null);
 
+  // Toast State
   const [toast, setToast] = useState({
     open: false,
     message: "",
     severity: "success",
   });
 
-  // ===============================
-  // FETCH CLIENTS
-  // ===============================
-  const fetchClients = async () => {
-    try {
-      setLoading(true);
+  // --- RBAC PERMISSIONS ---
+  const canViewAllOrgs = currentUser.role === "Super Admin";
+  // Add/Edit/Delete: Super Admin, Admin
+  // Finance: View Only
+  // Manager/Telecaller: No Access (should be blocked by RouteGuard usually)
+  const canManage = ["Super Admin", "Admin"].includes(currentUser.role);
+const fetchClients = async () => {
+  try {
+    const token = localStorage.getItem("token");
 
-      const response = await fetch(API_URL, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+    const res = await fetch("http://localhost/crm/clients_page.php", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-      const data = await response.json();
+    const data = await res.json();
 
-      if (data.success) {
-        setClients(data.data);
-      }
-    } catch (error) {
-      console.error("Fetch error:", error);
-      showToast("Failed to fetch clients", "error");
-    } finally {
-      setLoading(false);
+    if (data.success) {
+      setClients(data.data);
     }
-  };
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setLoading(false);
+  }
+};
+ const fetchLeads = async () => {
+   try {
+     const res = await fetch("http://localhost/crm/dropdown.php?table=leads");
+     const data = await res.json();
 
-  const fetchLeads = async () => {
-    try {
-      const response = await fetch(LEADS_API_URL, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const data = await response.json();
-      if (data.success) {
-        setLeads(data.data);
-      }
-    } catch (error) {
-      console.error("Leads fetch error:", error);
-    }
-  };
+     if (data.success) {
+       setLeads(data.data);
+     }
+   } catch (err) {
+     console.error(err);
+   }
+ };
 
-  useEffect(() => {
-    fetchClients();
-    fetchLeads();
-  }, []);
+useEffect(() => {
+  fetchClients();
+  fetchLeads();
+}, []);
+
+
+  const handleToastClose = () => {
+    setToast({ ...toast, open: false });
+  };
 
   const showToast = (message, severity = "success") => {
     setToast({ open: true, message, severity });
   };
 
-  const handleToastClose = () => {
-    setToast({ ...toast, open: false });
+  // Dialog Handlers
+  const handleOpenDialog = (mode, client = null) => {
+    setDialogMode(mode);
+    setCurrentClient(client);
+    setOpenDialog(true);
   };
-  // ===============================
-  // SAVE (ADD / EDIT)
-  // ===============================
-  const handleSave = async (formData) => {
-    try {
-      const form = new FormData();
 
-      form.append("lead_guid", formData.lead_id);
-      form.append("start_date", formData.start_date);
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setCurrentClient(null);
+  };
 
-      // Only append file if it's a real File object
-      if (formData.contract_file instanceof File) {
-        form.append("contract_file", formData.contract_file);
-      }
+  const handleOpenView = (client) => {
+    setViewClient(client);
+    setOpenViewDialog(true);
+  };
 
-      let response;
+  const handleCloseView = () => {
+    setOpenViewDialog(false);
+    setViewClient(null);
+  };
 
-      if (dialogMode === "add") {
-        // ========================
-        // CREATE CLIENT
-        // ========================
-        response = await fetch(API_URL, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: form,
-        });
-      } else {
-        // ========================
-        // UPDATE CLIENT
-        // ========================
-        form.append("client_guid", currentClient.client_guid);
+const handleSave = async (formData) => {
+  const token = localStorage.getItem("token");
 
-        response = await fetch(API_URL, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: form,
-        });
-      }
+  const form = new FormData();
 
-      const data = await response.json();
+  form.append("lead_guid", formData.lead_guid);
+  form.append("start_date", formData.start_date);
 
-      if (data.success) {
-        showToast(
-          dialogMode === "add"
-            ? "Client added successfully"
-            : "Client updated successfully",
-        );
+  if (formData.contract_file instanceof File) {
+    form.append("contract_file", formData.contract_file);
+  }
 
-        fetchClients();
-        setOpenDialog(false);
-      } else {
-        showToast(data.message || "Operation failed", "error");
-      }
-    } catch (error) {
-      console.error("Save error:", error);
-      showToast("Something went wrong", "error");
+  if (dialogMode === "edit") {
+    form.append("client_guid", currentClient.client_guid);
+  }
+
+  try {
+    const res = await fetch("http://localhost/crm/clients_page.php", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: form,
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      fetchClients();
+      handleCloseDialog();
+    } else {
+      alert(data.message);
     }
-  };
+  } catch (err) {
+    console.error(err);
+  }
+};
 
-  // ===============================
-  // DELETE
-  // ===============================
-  const handleDelete = async (client_guid) => {
-    try {
-      const response = await fetch(API_URL, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ client_guid }),
-      });
+const handleDelete = async (client_guid) => {
+  const token = localStorage.getItem("token");
 
-      const data = await response.json();
+  if (!window.confirm("Delete this client?")) return;
 
-      if (data.success) {
-        showToast("Client deleted successfully");
-        fetchClients();
-      } else {
-        showToast(data.message, "error");
-      }
-    } catch (error) {
-      showToast("Something went wrong", "error");
-    }
-  };
+  const res = await fetch("http://localhost/crm/clients_page.php", {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ client_guid }),
+  });
 
-  const handleChangePage = (_, newPage) => {
+  const data = await res.json();
+
+  if (data.success) {
+    fetchClients();
+  }
+};
+
+
+  const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
 
@@ -212,291 +205,193 @@ const Clients = () => {
     setPage(0);
   };
 
-  // ===============================
-  // DOWNLOAD FILE (Frontend Force)
-  // ===============================
-  const handleDownload = async (fileUrl, fileName) => {
-    try {
-      setLoading(true);
+  // Access Denied for Telecaller (Double check, though RouteGuard handles it)
+  if (["Telecaller"].includes(currentUser.role)) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error">
+          Access Denied: You do not have permission to view clients.
+        </Alert>
+      </Box>
+    );
+  }
 
-      // Extract filename from path
-      const actualFileName = fileUrl.split("/").pop();
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          p: 3,
+          display: "flex",
+          justifyContent: "center",
+          height: "100vh",
+          alignItems: "center",
+        }}
+      >
+        <LoadingSpinner
+          loading={true}
+          mode="centered"
+          message="Loading Clients..."
+        />
+      </Box>
+    );
+  }
 
-      const response = await fetch(
-        `${API_URL}?action=download&file=${actualFileName}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error("Download failed");
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", fileName); // Force download
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Download error:", error);
-      showToast("Failed to download file", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ===============================
-  // UI
-  // ===============================
   return (
     <>
-      <Box sx={{ p: 3 }}>
-        {loading ? (
-          <LoadingSpinner loading={true} />
-        ) : (
-          <>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                mb: 3,
-              }}
+      <PageContainer
+        title="Clients Management"
+        subtitle="Manage your clients, contracts, and project relationships."
+        action={
+          canManage && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => handleOpenDialog("add")}
+              sx={{ width: { xs: "100%", sm: "auto" } }}
             >
-              <Typography variant="h4" fontWeight={700}>
-                Clients Management
-              </Typography>
-
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => {
-                  setDialogMode("add");
-                  setOpenDialog(true);
-                }}
-              >
-                Add Client
-              </Button>
-            </Box>
-
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Client Name</TableCell>
-                    <TableCell>Email</TableCell>
-                    <TableCell>Phone</TableCell>
-                    <TableCell>Company Name</TableCell>
-                    <TableCell align="center">Contract</TableCell>
-                    <TableCell align="center">Start Date</TableCell>
-                    <TableCell align="center">Status</TableCell>
-                    <TableCell align="center">Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-
-                <TableBody>
-                  {clients
-                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                    .map((client) => (
-                      <TableRow key={client.client_guid} hover>
-                        <TableCell sx={{ py: 1.5 }}>
-                          <Box
-                            sx={{
-                              display: "-webkit-box",
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: "vertical",
-                              overflow: "hidden",
-                            }}
-                          >
-                            {client.client_name}
-                          </Box>
-                        </TableCell>
-                        <TableCell sx={{ py: 1.5 }}>
-                          <Box
-                            sx={{
-                              display: "-webkit-box",
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: "vertical",
-                              overflow: "hidden",
-                            }}
-                          >
-                            {client.email}
-                          </Box>
-                        </TableCell>
-                        <TableCell sx={{ py: 1.5 }}>{client.phone}</TableCell>
-                        <TableCell sx={{ py: 1.5 }}>
-                          <Box
-                            sx={{
-                              display: "-webkit-box",
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: "vertical",
-                              overflow: "hidden",
-                            }}
-                          >
-                            {client.company_name}
-                          </Box>
-                        </TableCell>
-                        <TableCell align="center" sx={{ py: 1.5 }}>
-                          {client.contract_file ? (
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                gap: 1,
-                              }}
-                            >
-                              {/* Preview Button (Opens in new tab) */}
-                              <Button
-                                variant="text"
-                                size="small"
-                                startIcon={<ViewIcon />}
-                                component="a"
-                                href={`${BASE_URL}${client.contract_file}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                sx={{
-                                  textTransform: "none",
-                                  color: "primary.main",
-                                  minWidth: "auto",
-                                }}
-                              >
-                                Preview
-                              </Button>
-
-                              {/* Download Button (Forces download) */}
-                              <IconButton
-                                size="small"
-                                color="primary"
-                                onClick={() =>
-                                  handleDownload(
-                                    client.contract_file,
-                                    client.contract_file.split("/").pop(),
-                                  )
-                                }
-                                title="Download"
-                              >
-                                <DownloadIcon fontSize="small" />
-                              </IconButton>
-                            </Box>
-                          ) : (
-                            "No File"
-                          )}
-                        </TableCell>
-
-                        <TableCell align="center" sx={{ py: 1.5 }}>
-                          {client.start_date}
-                        </TableCell>
-                        <TableCell align="center" sx={{ py: 1.5 }}>
-                          <Chip
-                            label={client.status}
-                            size="small"
-                            color={
-                              client.status === "Closed Won"
-                                ? "success"
-                                : "default"
-                            }
-                            sx={{ fontWeight: 500 }}
-                          />
-                        </TableCell>
-                        <TableCell align="center" sx={{ py: 1.5 }}>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              justifyContent: "center",
-                              gap: 0.5,
-                            }}
-                          >
-                            {/* 👁 View */}
+              Add Client
+            </Button>
+          )
+        }
+      >
+        <TableContainer component={Paper} sx={{ overflowX: "auto" }}>
+          <Table sx={{ minWidth: { xs: 800, md: "auto" } }}>
+            <TableHead>
+              <TableRow sx={{ bgcolor: "grey.100" }}>
+                <TableCell sx={{ fontWeight: 600 }}>Client Name</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Email</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Phone</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Company</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Contract File</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Start Date</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {clients
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((client) => (
+                  <TableRow key={client.id} hover>
+                    <TableCell>{client.client_name}</TableCell>
+                    <TableCell>{client.email}</TableCell>
+                    <TableCell>{client.phone}</TableCell>
+                    <TableCell>{client.company}</TableCell>
+                    <TableCell>
+                      {typeof client.contract_file === "object"
+                        ? client.contract_file?.name || "Uploaded File"
+                        : client.contract_file || "No File"}
+                    </TableCell>
+                    <TableCell>{client.start_date}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={client.lead_status}
+                        size="small"
+                        color={
+                          client.lead_status === "Closed Won"
+                            ? "success"
+                            : "default"
+                        }
+                        sx={{
+                          fontWeight: 600,
+                          borderRadius: "6px",
+                          fontSize: "0.75rem",
+                          minWidth: "100px",
+                          justifyContent: "center",
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: "flex" }}>
+                        <IconButton
+                          size="small"
+                          color="info"
+                          onClick={() => handleOpenView(client)}
+                        >
+                          <ViewIcon fontSize="small" />
+                        </IconButton>
+                        {canManage ? (
+                          <>
                             <IconButton
-                              color="info"
                               size="small"
-                              onClick={() => {
-                                setViewClient(client);
-                                setOpenViewDialog(true);
-                              }}
-                            >
-                              <ViewIcon fontSize="small" />
-                            </IconButton>
-
-                            {/* ✏ Edit */}
-                            <IconButton
                               color="primary"
-                              size="small"
-                              onClick={() => {
-                                setCurrentClient(client);
-                                setDialogMode("edit");
-                                setOpenDialog(true);
-                              }}
+                              onClick={() => handleOpenDialog("edit", client)}
                             >
                               <EditIcon fontSize="small" />
                             </IconButton>
-
-                            {/* 🗑 Delete */}
                             <IconButton
                               size="small"
+                              color="error"
                               onClick={() => handleDelete(client.client_guid)}
                             >
-                              <DeleteIcon color="error" fontSize="small" />
+                              <DeleteIcon fontSize="small" />
                             </IconButton>
-                          </Box>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                          </>
+                        ) : (
+                          <Typography variant="caption" color="textSecondary">
+                            View Only
+                          </Typography>
+                        )}
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              {clients.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={8} align="center">
+                    No clients found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={clients.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
 
-            <TablePagination
-              rowsPerPageOptions={[5, 10, 25]}
-              component="div"
-              count={clients.length}
-              rowsPerPage={rowsPerPage}
-              page={page}
-              onPageChange={handleChangePage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-            />
-          </>
-        )}
-      </Box>
+        {/* Client Form Modal */}
+        <ClientFormModal
+          open={openDialog}
+          onClose={handleCloseDialog}
+          onSave={handleSave}
+          leads={leads}
+          clients={clients}
+          initialData={currentClient}
+          mode={dialogMode}
+        />
 
-      {/* ADD / EDIT CLIENT MODAL */}
-      <ClientFormModal
-        open={openDialog}
-        onClose={() => setOpenDialog(false)}
-        onSave={handleSave}
-        leads={leads}
-        clients={clients}
-        initialData={currentClient}
-        mode={dialogMode}
-      />
-
-      {/* VIEW CLIENT DETAILS MODAL */}
-      <ClientDetailsModal
-        open={openViewDialog}
-        onClose={() => setOpenViewDialog(false)}
-        client={viewClient}
-        onEdit={() => {
-          setOpenViewDialog(false);
-          setCurrentClient(viewClient);
-          setDialogMode("edit");
-          setOpenDialog(true);
-        }}
-      />
+        {/* Client Details Modal */}
+        <ClientDetailsModal
+          open={openViewDialog}
+          onClose={handleCloseView}
+          client={viewClient}
+          onEdit={() => {
+            handleCloseView();
+            handleOpenDialog("edit", viewClient);
+          }}
+        />
+      </PageContainer>
 
       <Snackbar
         open={toast.open}
-        autoHideDuration={4000}
+        autoHideDuration={6000}
         onClose={handleToastClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
-        <Alert severity={toast.severity}>{toast.message}</Alert>
+        <Alert
+          onClose={handleToastClose}
+          severity={toast.severity}
+          sx={{ width: "100%" }}
+        >
+          {toast.message}
+        </Alert>
       </Snackbar>
     </>
   );
