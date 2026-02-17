@@ -91,6 +91,7 @@ if (!$token) {
 try {
 
     $decoded = JWT::decode($token, new Key($jwt_secret, $jwt_algorithm));
+    $org_guid = $decoded->organization_guid ?? null;
 
 } catch (Exception $e) {
 
@@ -131,7 +132,8 @@ function generateUUID()
     $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
     $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
 
-    return vsprintf('%s%s-%s-%s-%s-%s%s%s',
+    return vsprintf(
+        '%s%s-%s-%s-%s-%s%s%s',
         str_split(bin2hex($data), 4)
     );
 }
@@ -151,6 +153,7 @@ if ($method === "GET") {
     $sql = "
         SELECT
             l.id,
+            l.lead_guid,
             l.client_name,
             l.phone,
             l.email,
@@ -162,11 +165,14 @@ if ($method === "GET") {
             u.name AS assigned_name
         FROM leads l
         LEFT JOIN users u ON l.assigned_to = u.user_guid
-        WHERE l.is_active = 1
+        WHERE l.is_active = 1 AND l.organization_guid = ?
         ORDER BY l.id DESC
     ";
 
-    $result = $conn->query($sql);
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $org_guid);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
     $data = [];
 
@@ -205,15 +211,16 @@ if ($method === "POST") {
             status,
             assigned_to,
             remarks,
+            organization_guid,
             created_at,
             is_active
         )
         VALUES
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 1)
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 1)
     ");
 
     $stmt->bind_param(
-        "sssssssss",
+        "ssssssssss",
         $guid,
         $input['client_name'],
         $input['phone'],
@@ -222,7 +229,8 @@ if ($method === "POST") {
         $input['source'],
         $input['status'],
         $input['assigned_to'],
-        $input['remarks']
+        $input['remarks'],
+        $org_guid
     );
 
     if ($stmt->execute()) {
@@ -262,11 +270,11 @@ if ($method === "PUT") {
             status = ?,
             assigned_to = ?,
             remarks = ?
-        WHERE id = ?
+        WHERE id = ? AND organization_guid = ?
     ");
 
     $stmt->bind_param(
-        "ssssssssi",
+        "ssssssssis",
         $input['client_name'],
         $input['phone'],
         $input['email'],
@@ -275,7 +283,8 @@ if ($method === "PUT") {
         $input['status'],
         $input['assigned_to'],
         $input['remarks'],
-        $input['id']
+        $input['id'],
+        $org_guid
     );
 
     if ($stmt->execute()) {
@@ -308,10 +317,10 @@ if ($method === "DELETE") {
     $stmt = $conn->prepare("
         UPDATE leads
         SET is_active = 0
-        WHERE id = ?
+        WHERE id = ? AND organization_guid = ?
     ");
 
-    $stmt->bind_param("i", $input['id']);
+    $stmt->bind_param("is", $input['id'], $org_guid);
 
     if ($stmt->execute()) {
 

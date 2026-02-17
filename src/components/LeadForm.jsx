@@ -1,382 +1,422 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  TextField,
-  Grid,
-  Typography,
-  Box,
-  Divider,
-  MenuItem,
-  Chip,
-  InputAdornment,
-  FormControl,
-  InputLabel,
-  Select,
-  useTheme,
-  useMediaQuery,
-} from "@mui/material";
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Button,
+    TextField,
+    Typography,
+    Box,
+    MenuItem,
+    FormControl,
+    Select,
+    useTheme,
+    useMediaQuery,
+    IconButton
+} from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import {
-  Person as PersonIcon,
-  Email as EmailIcon,
-  Phone as PhoneIcon,
-  Business as BusinessIcon,
-  Label as LabelIcon,
-  AssignmentInd as AssignedIcon,
-  Notes as NotesIcon,
-  Close as CloseIcon,
-} from "@mui/icons-material";
+    Person as PersonIcon,
+    Email as EmailIcon,
+    Phone as PhoneIcon,
+    Business as BusinessIcon,
+    Label as LabelIcon,
+    AssignmentInd as AssignedIcon,
+    Notes as NotesIcon,
+    Close as CloseIcon,
+    Source as SourceIcon,
+    AssignmentTurnedIn as StatusIcon
+} from '@mui/icons-material';
 
-import leadsData from "../data/leads.json";
+import apiEndpoints from '../apiconfig';
+import leadsData from '../data/leads.json';
 
-const STATUS_OPTIONS = [...new Set(leadsData.map((lead) => lead.status))];
-const SOURCE_OPTIONS = [...new Set(leadsData.map((lead) => lead.source))];
+const STATUS_OPTIONS = [...new Set(leadsData.map(lead => lead.status))];
+const SOURCE_OPTIONS = [...new Set(leadsData.map(lead => lead.source))];
+
+// Card wrapper for inputs - Defined outside to prevent remounting and focus loss
+const InputCard = ({ label, icon, children, theme }) => (
+    <Box sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1.5,
+        p: 2,
+        border: '1px solid',
+        borderColor: 'divider',
+        borderRadius: '12px',
+        bgcolor: 'background.paper',
+        transition: 'all 0.2s',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+        '&:hover': {
+            borderColor: theme.palette.primary.main,
+            boxShadow: '0 4px 12px rgba(61, 82, 160, 0.08)'
+        }
+    }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{
+                color: theme.palette.primary.main,
+                display: 'flex',
+                alignItems: 'center',
+                bgcolor: alpha(theme.palette.primary.main, 0.1),
+                p: 0.5,
+                borderRadius: '6px'
+            }}>
+                {React.cloneElement(icon, { fontSize: 'small' })}
+            </Box>
+            <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                {label}
+            </Typography>
+        </Box>
+        <Box sx={{ flexGrow: 1 }}>
+            {children}
+        </Box>
+    </Box>
+);
 
 const LeadForm = ({ open, onClose, onSave, initialData, mode }) => {
-  const [users, setUsers] = useState([]);
+    const [users, setUsers] = useState([]);
+    const theme = useTheme();
+    const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const theme = useTheme();
-  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
+    // State uses 'name' and 'assignedTo' to match the user's JSX
+    const [formData, setFormData] = useState({
+        id: null,
+        name: '',
+        company: '',
+        email: '',
+        phone: '',
+        status: 'New',
+        source: 'Website',
+        assignedTo: '',
+        remarks: ''
+    });
 
-  // State uses 'name' and 'assignedTo' to match the user's JSX
-  const [formData, setFormData] = useState({
-    id: null,
-    name: "",
-    company: "",
-    email: "",
-    phone: "",
-    status: "New",
-    source: "Website",
-    assignedTo: "",
-    remarks: "",
-  });
+    const [errors, setErrors] = useState({});
 
-  const [errors, setErrors] = useState({});
-
-  // Reset form when dialog opens or initialData changes
-  useEffect(() => {
-    if (open) {
-      if (mode === "edit" && initialData) {
-        // Map back from data model to form state
-        setFormData({
-          id: initialData.id || null,
-          name: initialData.client_name || "",
-          company: initialData.company || "",
-          email: initialData.email || "",
-          phone: initialData.phone || "",
-          status: initialData.status || "New",
-          source: initialData.source || "Website",
-          assignedTo: initialData.assigned_to || "",
-          remarks: initialData.remarks || "",
-        });
-      } else {
-        setFormData({
-          id: null,
-          name: "",
-          company: "",
-          email: "",
-          phone: "",
-          status: "New",
-          source: "Website",
-          assignedTo: "",
-          remarks: "",
-        });
-      }
-      setErrors({});
-    }
-  }, [open, mode, initialData]);
-
-  // Fetch users for dropdown
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await fetch(
-          "http://localhost/crm/users_dropdown.php",
-        );
-        const data = await res.json();
-        if (data.success) {
-          setUsers(data.data);
+    // Reset form when dialog opens or initialData changes
+    useEffect(() => {
+        if (open) {
+            if (mode === 'edit' && initialData) {
+                // Map back from data model to form state
+                setFormData({
+                    id: initialData.id || initialData.lead_guid || null,
+                    name: initialData.client_name || '',
+                    company: initialData.company || '',
+                    email: initialData.email || '',
+                    phone: initialData.phone || '',
+                    status: initialData.status || 'New',
+                    source: initialData.source || 'Website',
+                    assignedTo: initialData.assigned_to_guid || initialData.assigned_to || '',
+                    remarks: initialData.remarks || ''
+                });
+            } else {
+                setFormData({
+                    id: null,
+                    name: '',
+                    company: '',
+                    email: '',
+                    phone: '',
+                    status: 'New',
+                    source: 'Website',
+                    assignedTo: '',
+                    remarks: ''
+                });
+            }
+            setErrors({});
         }
-      } catch (err) {
-        console.error("Users fetch error:", err);
-      }
+    }, [open, mode, initialData]);
+
+    // Fetch users for dropdown
+    useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                // Using apiEndpoints to stay consistent with other fetch calls
+                const res = await fetch(apiEndpoints.usersdropdown, {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("token") || localStorage.getItem("crm_token")}`
+                    }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    setUsers(data.data);
+                }
+            } catch (err) {
+                console.error("Users fetch error:", err);
+            }
+        };
+        fetchUsers();
+    }, []);
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+        // Clear error when user types
+        if (errors[name]) {
+            setErrors({ ...errors, [name]: '' });
+        }
     };
-    fetchUsers();
-  }, []);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-    // Clear error when user types
-    if (errors[name]) {
-      setErrors({ ...errors, [name]: "" });
-    }
-  };
+    const validateForm = () => {
+        let tempErrors = {};
+        tempErrors.name = formData.name ? "" : "Client Name is required.";
+        tempErrors.company = formData.company ? "" : "Company is required.";
+        tempErrors.email = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) ? "" : "Valid email is required.";
+        tempErrors.phone = /^[0-9+\s-]{10,15}$/.test(formData.phone) ? "" : "Valid phone number (10-15 digits) required.";
+        tempErrors.status = formData.status ? "" : "Status is required.";
+        tempErrors.source = formData.source ? "" : "Source is required.";
+        tempErrors.assignedTo = formData.assignedTo ? "" : "Assigned To is required.";
 
-  const validateForm = () => {
-    let tempErrors = {};
-    tempErrors.name = formData.name ? "" : "Client Name is required.";
-    tempErrors.company = formData.company ? "" : "Company is required.";
-    tempErrors.email = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)
-      ? ""
-      : "Valid email is required.";
-    tempErrors.phone = /^[0-9+\s-]{10,15}$/.test(formData.phone)
-      ? ""
-      : "Valid phone number (10-15 digits) required.";
-    tempErrors.status = formData.status ? "" : "Status is required.";
-    tempErrors.source = formData.source ? "" : "Source is required.";
-    tempErrors.assignedTo = formData.assignedTo
-      ? ""
-      : "Assigned To is required.";
+        setErrors(tempErrors);
+        return Object.values(tempErrors).every(x => x === "");
+    };
 
-    setErrors(tempErrors);
-    return Object.values(tempErrors).every((x) => x === "");
-  };
+    const handleSubmit = () => {
+        if (validateForm()) {
+            // Map form state to PHP API format ONLY per user request
+            const submissionData = {
+                client_name: formData.name,
+                phone: formData.phone || "",
+                email: formData.email || "",
+                company: formData.company || "",
+                source: formData.source || "Website",
+                status: formData.status || "New",
+                assigned_to: formData.assignedTo || "",
+                remarks: formData.remarks || "",
+            };
 
-  const handleSubmit = () => {
-    if (validateForm()) {
-      // Map form state to PHP API format ONLY
-      const submissionData = {
-        client_name: formData.name,
-        phone: formData.phone || "",
-        email: formData.email || "",
-        company: formData.company || "",
-        source: formData.source || "Website",
-        status: formData.status || "New",
-        assigned_to: formData.assignedTo || "",
-        remarks: formData.remarks || "",
-      };
+            // Include id for edit operations
+            if (mode === "edit" && formData.id) {
+                submissionData.id = formData.id;
+            }
 
-      // Include id for edit operations
-      if (mode === "edit" && formData.id) {
-        submissionData.id = formData.id;
-      }
+            console.log("LeadForm submitting:", submissionData);
+            onSave(submissionData);
+        }
+    };
 
-      console.log("📮 LeadForm submitting:", submissionData);
-      onSave(submissionData);
-    }
-  };
-
-  return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="md"
-      fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: "16px",
-          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-          overflow: "hidden",
-        },
-      }}
-    >
-      <DialogTitle
-        sx={{
-          borderBottom: "1px solid #f1f5f9",
-          px: { xs: 2.5, md: 4 },
-          py: 2.5,
-          fontSize: "1.25rem",
-          fontWeight: 600,
-          color: "#0f172a",
-        }}
-      >
-        {mode === "add" ? "Add New Lead" : "Edit Lead Details"}
-      </DialogTitle>
-
-      <DialogContent dividers>
-        <Box component="form" noValidate sx={{ mt: 1 }}>
-          <Grid container spacing={3}>
-            {/* Client Name */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                label="Client Name"
-                name="name"
-                value={formData.name || ""}
-                onChange={handleChange}
-                error={!!errors.name}
-                helperText={errors.name}
-                required
-              />
-            </Grid>
-
-            {/* Company */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                label="Company"
-                name="company"
-                value={formData.company || ""}
-                onChange={handleChange}
-                error={!!errors.company}
-                helperText={errors.company}
-                required
-              />
-            </Grid>
-
-            {/* Email */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                label="Email"
-                name="email"
-                type="email"
-                value={formData.email || ""}
-                onChange={handleChange}
-                error={!!errors.email}
-                helperText={errors.email}
-                required
-              />
-            </Grid>
-
-            {/* Phone */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                label="Phone"
-                name="phone"
-                value={formData.phone || ""}
-                onChange={handleChange}
-                error={!!errors.phone}
-                helperText={errors.phone}
-                required
-              />
-            </Grid>
-
-            {/* Status */}
-            <Grid size={{ xs: 12, md: 4 }}>
-              <FormControl fullWidth error={!!errors.status}>
-                <InputLabel>Status</InputLabel>
-                <Select
-                  name="status"
-                  value={formData.status || ""}
-                  onChange={handleChange}
-                  label="Status"
-                >
-                  {STATUS_OPTIONS.map((option) => (
-                    <MenuItem key={option} value={option}>
-                      {option}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            {/* Source */}
-            <Grid size={{ xs: 12, md: 4 }}>
-              <FormControl fullWidth error={!!errors.source}>
-                <InputLabel>Source</InputLabel>
-                <Select
-                  name="source"
-                  value={formData.source || ""}
-                  onChange={handleChange}
-                  label="Source"
-                >
-                  {SOURCE_OPTIONS.map((option) => (
-                    <MenuItem key={option} value={option}>
-                      {option}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            {/* Assign */}
-            <Grid size={{ xs: 12, md: 4 }}>
-              <FormControl fullWidth error={!!errors.assignedTo}>
-                <InputLabel>Assign To</InputLabel>
-                <Select
-                  name="assignedTo"
-                  value={formData.assignedTo || ""}
-                  onChange={handleChange}
-                  label="Assign To"
-                >
-                  {users.length === 0 ? (
-                    <MenuItem disabled>No users found</MenuItem>
-                  ) : (
-                    users.map((user) => (
-                      <MenuItem key={user.user_guid} value={user.user_guid}>
-                        {user.name}
-                      </MenuItem>
-                    ))
-                  )}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            {/* Remarks */}
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                label="Remarks"
-                name="remarks"
-                multiline
-                rows={4}
-                value={formData.remarks || ""}
-                onChange={handleChange}
-              />
-            </Grid>
-          </Grid>
-        </Box>
-      </DialogContent>
-
-      {/* Action Buttons */}
-      <Box
-        sx={{
-          mt: 4,
-          display: "flex",
-          justifyContent: "flex-end",
-          gap: 2,
-          pt: 2,
-          borderTop: "1px solid #e2e8f0",
-          padding: "16px 24px",
-        }}
-      >
-        <Button
-          onClick={onClose}
-          variant="outlined"
-          color="inherit"
-          sx={{
-            height: 44,
-            px: 3,
-            borderRadius: "8px",
-            textTransform: "none",
-            fontWeight: 600,
-            color: "#64748b",
-            borderColor: "#cbd5e1",
-            "&:hover": {
-              backgroundColor: "#f1f5f9",
-              borderColor: "#94a3b8",
-            },
-          }}
+    return (
+        <Dialog
+            open={open}
+            onClose={onClose}
+            maxWidth="md"
+            fullWidth
+            PaperProps={{
+                sx: {
+                    borderRadius: '16px',
+                    width: '100%',
+                    maxWidth: '840px',
+                    boxShadow: '0 24px 48px rgba(0,0,0,0.2)',
+                    overflow: 'hidden'
+                }
+            }}
         >
-          Cancel
-        </Button>
-        <Button
-          onClick={handleSubmit}
-          variant="contained"
-          color="primary"
-          sx={{
-            height: 44,
-            px: 4,
-            borderRadius: "8px",
-            textTransform: "none",
-            fontWeight: 600,
-            boxShadow: "0 4px 6px -1px rgba(79, 70, 229, 0.2)",
-            "&:hover": {
-              boxShadow: "0 10px 15px -3px rgba(79, 70, 229, 0.2)",
-            },
-          }}
-        >
-          {mode === "add" ? "Add Lead" : "Save Changes"}
-        </Button>
-      </Box>
-    </Dialog>
-  );
+            <DialogTitle component="div" sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                px: 4,
+                py: 2.5,
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+                bgcolor: 'background.paper'
+            }}>
+                <Typography variant="h5" fontWeight={700} sx={{ fontFamily: 'Montserrat', color: '#0f172a' }}>
+                    {mode === 'add' ? 'Add New Lead' : 'Edit Lead Details'}
+                </Typography>
+                <IconButton onClick={onClose} size="small" sx={{ bgcolor: 'action.hover' }}>
+                    <CloseIcon />
+                </IconButton>
+            </DialogTitle>
+
+            <DialogContent dividers sx={{ p: 4, bgcolor: '#f8f9fc' }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
+
+                    {/* Row 1 */}
+                    <InputCard label="Client Name" icon={<PersonIcon />} theme={theme}>
+                        <TextField
+                            fullWidth
+                            name="name"
+                            value={formData.name || ''}
+                            onChange={handleChange}
+                            error={!!errors.name}
+                            helperText={errors.name}
+                            placeholder="Enter client name"
+                            variant="outlined"
+                            sx={{ '& .MuiInputBase-root': { height: '48px' } }}
+                        />
+                    </InputCard>
+
+                    <InputCard label="Company" icon={<BusinessIcon />} theme={theme}>
+                        <TextField
+                            fullWidth
+                            name="company"
+                            value={formData.company || ''}
+                            onChange={handleChange}
+                            error={!!errors.company}
+                            helperText={errors.company}
+                            placeholder="Enter company name"
+                            variant="outlined"
+                            sx={{ '& .MuiInputBase-root': { height: '48px' } }}
+                        />
+                    </InputCard>
+
+                    {/* Row 2 */}
+                    <InputCard label="Email Address" icon={<EmailIcon />} theme={theme}>
+                        <TextField
+                            fullWidth
+                            name="email"
+                            type="email"
+                            value={formData.email || ''}
+                            onChange={handleChange}
+                            error={!!errors.email}
+                            helperText={errors.email}
+                            placeholder="Enter email address"
+                            variant="outlined"
+                            sx={{ '& .MuiInputBase-root': { height: '48px' } }}
+                        />
+                    </InputCard>
+
+                    <InputCard label="Phone Number" icon={<PhoneIcon />} theme={theme}>
+                        <TextField
+                            fullWidth
+                            name="phone"
+                            value={formData.phone || ''}
+                            onChange={handleChange}
+                            error={!!errors.phone}
+                            helperText={errors.phone}
+                            placeholder="Enter phone number"
+                            variant="outlined"
+                            sx={{ '& .MuiInputBase-root': { height: '48px' } }}
+                        />
+                    </InputCard>
+
+                    {/* Row 3 */}
+                    <InputCard label="Status" icon={<StatusIcon />} theme={theme}>
+                        <TextField
+                            select
+                            fullWidth
+                            name="status"
+                            value={formData.status || ''}
+                            onChange={handleChange}
+                            error={!!errors.status}
+                            helperText={errors.status}
+                            variant="outlined"
+                            sx={{ '& .MuiInputBase-root': { height: '48px' } }}
+                        >
+                            {STATUS_OPTIONS.map((option) => (
+                                <MenuItem key={option} value={option}>
+                                    {option}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+                    </InputCard>
+
+                    <InputCard label="Source" icon={<SourceIcon />} theme={theme}>
+                        <TextField
+                            select
+                            fullWidth
+                            name="source"
+                            value={formData.source || ''}
+                            onChange={handleChange}
+                            error={!!errors.source}
+                            helperText={errors.source}
+                            variant="outlined"
+                            sx={{ '& .MuiInputBase-root': { height: '48px' } }}
+                        >
+                            {SOURCE_OPTIONS.map((option) => (
+                                <MenuItem key={option} value={option}>
+                                    {option}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+                    </InputCard>
+
+                    {/* Row 4 */}
+                    <InputCard label="Assign To" icon={<AssignedIcon />} theme={theme}>
+                        <TextField
+                            select
+                            fullWidth
+                            name="assignedTo"
+                            value={formData.assignedTo || ''}
+                            onChange={handleChange}
+                            error={!!errors.assignedTo}
+                            helperText={errors.assignedTo}
+                            variant="outlined"
+                            sx={{ '& .MuiInputBase-root': { height: '48px' } }}
+                        >
+                            {users.length === 0 ? (
+                                <MenuItem disabled>No users found</MenuItem>
+                            ) : (
+                                users.map((user) => (
+                                    <MenuItem key={user.user_guid} value={user.user_guid}>
+                                        {user.name}
+                                    </MenuItem>
+                                ))
+                            )}
+                        </TextField>
+                    </InputCard>
+
+                    {/* Remarks - Now in Row 4 Col 2 */}
+                    <InputCard label="Remarks" icon={<NotesIcon />} theme={theme}>
+                        <TextField
+                            fullWidth
+                            name="remarks"
+                            value={formData.remarks || ''}
+                            onChange={handleChange}
+                            placeholder="Enter remarks"
+                            variant="outlined"
+                            sx={{ '& .MuiInputBase-root': { height: '48px' } }}
+                        />
+                    </InputCard>
+
+                </Box>
+            </DialogContent>
+
+            {/* Action Buttons */}
+            <DialogActions sx={{ p: 3, px: 4, borderTop: '1px solid', borderColor: 'divider' }}>
+                <Button
+                    onClick={onClose}
+                    variant="outlined"
+                    color="inherit"
+                    sx={{
+                        height: 44,
+                        px: 3,
+                        borderRadius: '8px',
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        borderColor: 'divider',
+                        '&:hover': {
+                            backgroundColor: 'action.hover',
+                            borderColor: 'divider'
+                        }
+                    }}
+                >
+                    Cancel
+                </Button>
+                <Button
+                    onClick={handleSubmit}
+                    variant="contained"
+                    color="primary"
+                    disableElevation
+                    sx={{
+                        height: 44,
+                        px: 4,
+                        borderRadius: '8px',
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        bgcolor: theme.palette.primary.main,
+                        '&:hover': {
+                            bgcolor: theme.palette.primary.dark
+                        }
+                    }}
+                >
+                    {mode === 'add' ? 'Add Lead' : 'Save Changes'}
+                </Button>
+            </DialogActions>
+        </Dialog>
+    );
 };
 
 export default LeadForm;
