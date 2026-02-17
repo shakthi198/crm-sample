@@ -40,30 +40,69 @@ if (!$username || !$password) {
 }
 
 // ==============================
-// FETCH USER
+// FETCH USER (Check super_admin table first)
 // ==============================
-// FETCH USER
-$stmt = $conn->prepare("
-    SELECT 
-        u.user_guid,
-        u.admin_guid,
-        u.organization_guid,
-        u.name,
-        u.password,
-        u.role_guid,
-        r.role_name,
-        u.is_active
-    FROM users u
-    JOIN roles r ON u.role_guid = r.role_guid
-    WHERE u.name = ?
-    LIMIT 1
-");
-$stmt->bind_param("s", $username);
+$is_super_admin = false;
+$stmt = $conn->prepare("SELECT * FROM super_admin WHERE email = ? OR username = ? LIMIT 1");
+$stmt->bind_param("ss", $username, $username);
 $stmt->execute();
-$user = $stmt->get_result()->fetch_assoc();
+$user_data = $stmt->get_result()->fetch_assoc();
+
+if ($user_data) {
+    // Found in super_admin table
+    $is_super_admin = true;
+    $user = [
+        'user_guid' => $user_data['super_admin_guid'],
+        'organization_guid' => null, // Super Admin is global
+        'admin_guid' => null,
+        'name' => $user_data['full_name'],
+        'username' => $user_data['username'],
+        'password' => $user_data['password'],
+        'role_name' => 'Super Admin',
+        'role_guid' => 'SA_ROLE_GUID_001',
+        'is_active' => $user_data['is_active']
+    ];
+} else {
+    // Check regular users table
+    $stmt = $conn->prepare("
+        SELECT 
+            u.user_guid,
+            u.admin_guid,
+            u.organization_guid,
+            u.name as full_name,
+            u.email,
+            u.password,
+            u.role_guid,
+            r.role_name,
+            u.is_active
+        FROM users u
+        JOIN roles r ON u.role_guid = r.role_guid
+        WHERE u.email = ? OR u.name = ?
+        LIMIT 1
+    ");
+    $stmt->bind_param("ss", $username, $username);
+    $stmt->execute();
+    $user_data = $stmt->get_result()->fetch_assoc();
+
+    if ($user_data) {
+        $user = [
+            'user_guid' => $user_data['user_guid'],
+            'organization_guid' => $user_data['organization_guid'],
+            'admin_guid' => $user_data['admin_guid'] ?? null,
+            'name' => $user_data['full_name'],
+            'username' => $user_data['email'],
+            'password' => $user_data['password'],
+            'role_name' => $user_data['role_name'],
+            'role_guid' => $user_data['role_guid'],
+            'is_active' => $user_data['is_active']
+        ];
+    } else {
+        $user = null;
+    }
+}
 
 // ==============================
-// VERIFY PASSWORD & MIGRATE
+// VERIFY PASSWORD
 // ==============================
 $is_valid = false;
 $needs_rehash = false;
@@ -72,7 +111,7 @@ if ($user) {
     if (password_verify($password, $user['password'])) {
         $is_valid = true;
     } elseif ($password === $user['password']) {
-        // Migration: Plain text match!
+        // Plain text match! (User requested this)
         $is_valid = true;
         $needs_rehash = true;
     }
@@ -80,29 +119,26 @@ if ($user) {
 
 if (!$is_valid) {
     http_response_code(401);
-    echo json_encode([
-        "success" => false,
-        "error" => "Invalid credentials"
-    ]);
+    echo json_encode(["success" => false, "error" => "Invalid credentials"]);
     exit;
 }
 
 // Upgrade to hash if needed
 if ($needs_rehash) {
     $new_hash = password_hash($password, PASSWORD_DEFAULT);
-    $upd = $conn->prepare("UPDATE users SET password = ? WHERE user_guid = ?");
+    if ($is_super_admin) {
+        $upd = $conn->prepare("UPDATE super_admin SET password = ? WHERE super_admin_guid = ?");
+    } else {
+        $upd = $conn->prepare("UPDATE users SET password = ? WHERE user_guid = ?");
+    }
     $upd->bind_param("ss", $new_hash, $user['user_guid']);
     $upd->execute();
     $upd->close();
 }
 
-
 if ($user['is_active'] == 0) {
     http_response_code(403);
-    echo json_encode([
-        "success" => false,
-        "error" => "Account inactive"
-    ]);
+    echo json_encode(["success" => false, "error" => "Account inactive"]);
     exit;
 }
 
@@ -111,7 +147,7 @@ if ($user['is_active'] == 0) {
 // ==============================
 $permissions = [];
 
-if (strcasecmp($user['role_name'], "Admin") === 0) {
+if (strcasecmp($user['role_name'], "Admin") === 0 || strcasecmp($user['role_name'], "Super Admin") === 0) {
     // Admin gets ALL permissions automatically with all rights
     $result = $conn->query("SELECT module, full_access, view, edit, `delete` FROM permissions WHERE is_active = 1");
     while ($row = $result->fetch_assoc()) {
@@ -144,10 +180,19 @@ if (strcasecmp($user['role_name'], "Admin") === 0) {
 }
 
 // ==============================
-// BUILD JWT PAYLOAD (NO EXP)
+// BUILD JWT PAYLOAD
 // ==============================
+$issuedAt = time();
+$expireTime = $issuedAt + (24 * 60 * 60); // Default: 24 hours
+
+// If Super Admin, expire in 30 minutes
+if (strcasecmp($user['role_name'], "Super Admin") === 0) {
+    $expireTime = $issuedAt + (30 * 60); // 30 minutes
+}
+
 $payload = [
-    "iat" => time(),
+    "iat" => $issuedAt,
+    "exp" => $expireTime,
     "user_guid" => $user['user_guid'],
     "organization_guid" => $user['organization_guid'],
     "admin_guid" => $user['admin_guid'],
