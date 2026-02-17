@@ -1,0 +1,190 @@
+<?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS");
+header("Content-Type: application/json");
+
+require_once 'config.php';
+require_once 'middleware.php';
+
+/* ----VALIDATE TOKEN (Handled by middleware)------*/
+if (!isset($validation) || !$validation['success']) {
+    exit; // Middleware already returns error response
+}
+
+$decoded = $validation['data'];
+$organization_guid = $decoded->organization_guid ?? null;
+$user_guid = $decoded->user_guid ?? null; // Current user performing the action
+
+if (!$organization_guid) {
+    http_response_code(401);
+    echo json_encode(["success" => false, "message" => "Invalid token payload"]);
+    exit();
+}
+
+$method = $_SERVER['REQUEST_METHOD'];
+
+// Handle GET Request
+if ($method === 'GET') {
+    $lead_guid = $_GET['lead_guid'] ?? null;
+    $from_date = $_GET['from_date'] ?? null;
+    $to_date = $_GET['to_date'] ?? null;
+
+    $sql = "
+        SELECT 
+            f.id,
+            f.followup_guid,
+            l.client_name AS lead_name,
+            f.lead_guid,
+            f.type,
+            f.next_followup_date AS date,
+            f.followup_time AS time,
+            f.status,
+            u.name AS assigned_to,
+            f.user_guid, 
+            f.outcome
+        FROM followups f
+        LEFT JOIN leads l ON f.lead_guid = l.lead_guid
+        LEFT JOIN users u ON f.user_guid = u.user_guid
+        WHERE f.organization_guid = ?
+        AND f.is_active = 1
+    ";
+
+    $params = [$organization_guid];
+    $types = "s";
+
+    if (!empty($lead_guid)) {
+        $sql .= " AND f.lead_guid = ?";
+        $params[] = $lead_guid;
+        $types .= "s";
+    }
+
+    if (!empty($from_date) && !empty($to_date)) {
+        $sql .= " AND f.next_followup_date BETWEEN ? AND ?";
+        $params[] = $from_date;
+        $params[] = $to_date;
+        $types .= "ss";
+    }
+
+    $sql .= " ORDER BY f.next_followup_date ASC";
+
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param($types, ...$params);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $data = [];
+    while ($row = $result->fetch_assoc()) {
+        $data[] = $row;
+    }
+
+    echo json_encode(["success" => true, "data" => $data]);
+    exit();
+}
+
+// Handle POST Request (Create, Update, Delete)
+if ($method === 'POST') {
+    $input = json_decode(file_get_contents("php://input"), true);
+
+    // Check for action param either in query string or body
+    $action = $_GET['action'] ?? $input['action'] ?? null;
+
+    // DELETE Action (Soft Delete)
+    if ($action === 'delete') {
+        $id = $input['id'] ?? null;
+        if (!$id) {
+            echo json_encode(["success" => false, "message" => "ID required for deletion"]);
+            exit();
+        }
+
+        $stmt = $conn->prepare("UPDATE followups SET is_active = 0 WHERE id = ? AND organization_guid = ?");
+        $stmt->bind_param("is", $id, $organization_guid);
+
+        if ($stmt->execute()) {
+            echo json_encode(["success" => true, "message" => "Followup deleted"]);
+        } else {
+            echo json_encode(["success" => false, "message" => "Failed to delete"]);
+        }
+        exit();
+    }
+
+    // UPDATE Status Only (Quick Action)
+    if (isset($input['id']) && count($input) === 2 && isset($input['status'])) {
+        $id = $input['id'];
+        $status = $input['status'];
+
+        $stmt = $conn->prepare("UPDATE followups SET status = ? WHERE id = ? AND organization_guid = ?");
+        $stmt->bind_param("sis", $status, $id, $organization_guid);
+
+        if ($stmt->execute()) {
+            echo json_encode(["success" => true, "message" => "Status updated"]);
+        } else {
+            echo json_encode(["success" => false, "message" => "Failed to update status"]);
+        }
+        exit();
+    }
+
+    // Standard Create / Update
+    $id = $input['id'] ?? null;
+    $lead_guid = $input['lead_id'] ?? null; // Frontend sends lead_id
+    $type = $input['type'] ?? 'Call';
+    $date = $input['date'] ?? date('Y-m-d');
+    $time = $input['time'] ?? '09:00:00';
+    $status = $input['status'] ?? 'Pending';
+    $assigned_to_guid = $input['assigned_to'] ?? $user_guid; // Default to current user if empty
+    $outcome = $input['outcome'] ?? '';
+
+    // Validation
+    if (!$lead_guid) {
+        echo json_encode(["success" => false, "message" => "Lead is required"]);
+        exit();
+    }
+
+    if ($id) {
+        // UPDATE
+        $stmt = $conn->prepare("
+            UPDATE followups 
+            SET lead_guid = ?, type = ?, next_followup_date = ?, followup_time = ?, status = ?, user_guid = ?, outcome = ?
+            WHERE id = ? AND organization_guid = ?
+        ");
+        $stmt->bind_param("sssssssis", $lead_guid, $type, $date, $time, $status, $assigned_to_guid, $outcome, $id, $organization_guid);
+
+        if ($stmt->execute()) {
+            echo json_encode(["success" => true, "message" => "Followup updated"]);
+        } else {
+            echo json_encode(["success" => false, "message" => "Failed to update", "error" => $conn->error]);
+        }
+
+    } else {
+        // CREATE
+        $followup_guid = bin2hex(random_bytes(16));
+        $created_at = date('Y-m-d H:i:s');
+        $is_active = 1;
+
+        $stmt = $conn->prepare("
+            INSERT INTO followups 
+            (followup_guid, organization_guid, lead_guid, type, status, user_guid, next_followup_date, followup_time, created_at, is_active, admin_guid, outcome)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ");
+
+        // admin_guid is usually same as user_guid for now or from token
+        $admin_guid = $decoded->admin_guid ?? $user_guid;
+
+        $stmt->bind_param("sssssssssiss", $followup_guid, $organization_guid, $lead_guid, $type, $status, $assigned_to_guid, $date, $time, $created_at, $is_active, $admin_guid, $outcome);
+
+        if ($stmt->execute()) {
+            echo json_encode(["success" => true, "message" => "Followup created"]);
+        } else {
+            echo json_encode(["success" => false, "message" => "Failed to create", "error" => $conn->error]);
+        }
+    }
+    exit();
+}
+
+http_response_code(405);
+echo json_encode(["success" => false, "message" => "Method not allowed"]);
+?>

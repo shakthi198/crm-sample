@@ -8,8 +8,8 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit(0);
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    exit(0);
 }
 
 $host = "localhost";
@@ -23,7 +23,7 @@ $jwt_algorithm = "HS256";
 $conn = new mysqli($host, $user, $password, $dbname);
 
 if ($conn->connect_error) {
-    die(json_encode(["status" => "error", "message" => "DB Connection Failed"]));
+    die(json_encode(["status" => "error", "message" => "DB Connection Failed"]));
 }
 
 ?>
