@@ -90,7 +90,7 @@ const FollowupModal = ({ open, onClose, onSave, followup, leads = [], users = []
                 date: followup.date || '',
                 time: followup.time || '',
                 status: followup.status || 'Pending',
-                assigned_to: followup.user_guid || '',
+                assigned_to: followup.assigned_to_guid || '',
                 outcome: followup.outcome || ''
             });
         } else if (open) {

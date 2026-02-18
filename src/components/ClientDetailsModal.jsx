@@ -225,7 +225,7 @@ const ClientDetailsModal = ({ open, onClose, client, onEdit }) => {
               display: "flex",
               alignItems: "center",
               gap: 2,
-              width: "100%",
+              width: "70%",
             }}
           >
             <Box

@@ -67,45 +67,44 @@ const Clients = () => {
   // Finance: View Only
   // Manager/Telecaller: No Access (should be blocked by RouteGuard usually)
   const canManage = ["Super Admin", "Admin"].includes(currentUser.role);
-const fetchClients = async () => {
-  try {
-    const token = localStorage.getItem("token");
+  const fetchClients = async () => {
+    try {
+      const token = localStorage.getItem("token");
 
-    const res = await fetch(`${apiEndpoints.clients}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+      const res = await fetch(`${apiEndpoints.clients}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (data.success) {
-      setClients(data.data);
+      if (data.success) {
+        setClients(data.data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    console.error(err);
-  } finally {
-    setLoading(false);
-  }
-};
- const fetchLeads = async () => {
-   try {
-     const res = await fetch(`${apiEndpoints.dropdown}?table=leads`);
-     const data = await res.json();
+  };
+  const fetchLeads = async () => {
+    try {
+      const res = await fetch(`${apiEndpoints.dropdown}?table=leads`);
+      const data = await res.json();
 
-     if (data.success) {
-       setLeads(data.data);
-     }
-   } catch (err) {
-     console.error(err);
-   }
- };
+      if (data.success) {
+        setLeads(data.data);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-useEffect(() => {
-  fetchClients();
-  fetchLeads();
-}, []);
-
+  useEffect(() => {
+    fetchClients();
+    fetchLeads();
+  }, []);
 
   const handleToastClose = () => {
     setToast({ ...toast, open: false });
@@ -137,65 +136,65 @@ useEffect(() => {
     setViewClient(null);
   };
 
-const handleSave = async (formData) => {
-  const token = localStorage.getItem("token");
+  const handleSave = async (formData) => {
+    const token = localStorage.getItem("token");
 
-  const form = new FormData();
+    const form = new FormData();
 
-  form.append("lead_guid", formData.lead_guid);
-  form.append("start_date", formData.start_date);
+    form.append("lead_guid", formData.lead_guid);
+    form.append("start_date", formData.start_date);
+    form.append("status", formData.status);
 
-  if (formData.contract_file instanceof File) {
-    form.append("contract_file", formData.contract_file);
-  }
+    if (formData.contract_file instanceof File) {
+      form.append("contract_file", formData.contract_file);
+    }
 
-  if (dialogMode === "edit") {
-    form.append("client_guid", currentClient.client_guid);
-  }
+    if (dialogMode === "edit") {
+      form.append("client_guid", currentClient.client_guid);
+    }
 
-  try {
+    try {
+      const res = await fetch(`${apiEndpoints.clients}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: form,
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        fetchClients();
+        handleCloseDialog();
+      } else {
+        alert(data.message);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDelete = async (client_guid) => {
+    const token = localStorage.getItem("token");
+
+    if (!window.confirm("Delete this client?")) return;
+
     const res = await fetch(`${apiEndpoints.clients}`, {
-      method: "POST",
+      method: "DELETE",
       headers: {
+        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: form,
+      body: JSON.stringify({ client_guid }),
     });
 
     const data = await res.json();
 
     if (data.success) {
       fetchClients();
-      handleCloseDialog();
-    } else {
-      alert(data.message);
     }
-  } catch (err) {
-    console.error(err);
-  }
-};
-
-const handleDelete = async (client_guid) => {
-  const token = localStorage.getItem("token");
-
-  if (!window.confirm("Delete this client?")) return;
-
-  const res = await fetch(`${apiEndpoints.clients}`, {
-    method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ client_guid }),
-  });
-
-  const data = await res.json();
-
-  if (data.success) {
-    fetchClients();
-  }
-};
-
+  };
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -286,12 +285,14 @@ const handleDelete = async (client_guid) => {
                     <TableCell>{client.start_date}</TableCell>
                     <TableCell>
                       <Chip
-                        label={client.lead_status}
+                        label={client.status || "pending"}
                         size="small"
                         color={
-                          client.lead_status === "Closed Won"
+                          client.status === "approved"
                             ? "success"
-                            : "default"
+                            : client.status === "rejected"
+                              ? "error"
+                              : "warning"
                         }
                         sx={{
                           fontWeight: 600,
@@ -299,6 +300,7 @@ const handleDelete = async (client_guid) => {
                           fontSize: "0.75rem",
                           minWidth: "100px",
                           justifyContent: "center",
+                          textTransform: "capitalize",
                         }}
                       />
                     </TableCell>

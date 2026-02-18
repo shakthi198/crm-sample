@@ -36,20 +36,19 @@ if ($method === 'GET') {
 
     $sql = "
         SELECT 
-            f.id,
             f.followup_guid,
             l.client_name AS lead_name,
             f.lead_guid,
             f.type,
-            f.next_followup_date AS date,
-            f.followup_time AS time,
+            f.date,
+            f.time,
             f.status,
             u.name AS assigned_to,
-            f.user_guid, 
+            f.assigned_to_guid, 
             f.outcome
         FROM followups f
         LEFT JOIN leads l ON f.lead_guid = l.lead_guid
-        LEFT JOIN users u ON f.user_guid = u.user_guid
+        LEFT JOIN users u ON f.assigned_to_guid = u.user_guid
         WHERE f.organization_guid = ?
         AND f.is_active = 1
     ";
@@ -64,13 +63,13 @@ if ($method === 'GET') {
     }
 
     if (!empty($from_date) && !empty($to_date)) {
-        $sql .= " AND f.next_followup_date BETWEEN ? AND ?";
+        $sql .= " AND f.date BETWEEN ? AND ?";
         $params[] = $from_date;
         $params[] = $to_date;
         $types .= "ss";
     }
 
-    $sql .= " ORDER BY f.next_followup_date ASC";
+    $sql .= " ORDER BY f.date ASC";
 
     $stmt = $conn->prepare($sql);
     $stmt->bind_param($types, ...$params);
@@ -95,14 +94,14 @@ if ($method === 'POST') {
 
     // DELETE Action (Soft Delete)
     if ($action === 'delete') {
-        $id = $input['id'] ?? null;
-        if (!$id) {
-            echo json_encode(["success" => false, "message" => "ID required for deletion"]);
+        $followup_guid = $input['followup_guid'] ?? null;
+        if (!$followup_guid) {
+            echo json_encode(["success" => false, "message" => "Followup GUID required for deletion"]);
             exit();
         }
 
-        $stmt = $conn->prepare("UPDATE followups SET is_active = 0 WHERE id = ? AND organization_guid = ?");
-        $stmt->bind_param("is", $id, $organization_guid);
+        $stmt = $conn->prepare("UPDATE followups SET is_active = 0 WHERE followup_guid = ? AND organization_guid = ?");
+        $stmt->bind_param("ss", $followup_guid, $organization_guid);
 
         if ($stmt->execute()) {
             echo json_encode(["success" => true, "message" => "Followup deleted"]);
@@ -113,12 +112,12 @@ if ($method === 'POST') {
     }
 
     // UPDATE Status Only (Quick Action)
-    if (isset($input['id']) && count($input) === 2 && isset($input['status'])) {
-        $id = $input['id'];
+    if (isset($input['followup_guid']) && count($input) === 2 && isset($input['status'])) {
+        $followup_guid = $input['followup_guid'];
         $status = $input['status'];
 
-        $stmt = $conn->prepare("UPDATE followups SET status = ? WHERE id = ? AND organization_guid = ?");
-        $stmt->bind_param("sis", $status, $id, $organization_guid);
+        $stmt = $conn->prepare("UPDATE followups SET status = ? WHERE followup_guid = ? AND organization_guid = ?");
+        $stmt->bind_param("sss", $status, $followup_guid, $organization_guid);
 
         if ($stmt->execute()) {
             echo json_encode(["success" => true, "message" => "Status updated"]);
@@ -129,7 +128,7 @@ if ($method === 'POST') {
     }
 
     // Standard Create / Update
-    $id = $input['id'] ?? null;
+    $followup_guid = $input['followup_guid'] ?? null;
     $lead_guid = $input['lead_id'] ?? null; // Frontend sends lead_id
     $type = $input['type'] ?? 'Call';
     $date = $input['date'] ?? date('Y-m-d');
@@ -144,14 +143,14 @@ if ($method === 'POST') {
         exit();
     }
 
-    if ($id) {
+    if ($followup_guid) {
         // UPDATE
         $stmt = $conn->prepare("
             UPDATE followups 
-            SET lead_guid = ?, type = ?, next_followup_date = ?, followup_time = ?, status = ?, user_guid = ?, outcome = ?
-            WHERE id = ? AND organization_guid = ?
+            SET lead_guid = ?, type = ?, date = ?, time = ?, status = ?, assigned_to_guid = ?, outcome = ?
+            WHERE followup_guid = ? AND organization_guid = ?
         ");
-        $stmt->bind_param("sssssssis", $lead_guid, $type, $date, $time, $status, $assigned_to_guid, $outcome, $id, $organization_guid);
+        $stmt->bind_param("sssssssss", $lead_guid, $type, $date, $time, $status, $assigned_to_guid, $outcome, $followup_guid, $organization_guid);
 
         if ($stmt->execute()) {
             echo json_encode(["success" => true, "message" => "Followup updated"]);
@@ -167,14 +166,11 @@ if ($method === 'POST') {
 
         $stmt = $conn->prepare("
             INSERT INTO followups 
-            (followup_guid, organization_guid, lead_guid, type, status, user_guid, next_followup_date, followup_time, created_at, is_active, admin_guid, outcome)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (followup_guid, organization_guid, lead_guid, type, status, assigned_to_guid, date, time, created_at, is_active, outcome)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
 
-        // admin_guid is usually same as user_guid for now or from token
-        $admin_guid = $decoded->admin_guid ?? $user_guid;
-
-        $stmt->bind_param("sssssssssiss", $followup_guid, $organization_guid, $lead_guid, $type, $status, $assigned_to_guid, $date, $time, $created_at, $is_active, $admin_guid, $outcome);
+        $stmt->bind_param("sssssssssis", $followup_guid, $organization_guid, $lead_guid, $type, $status, $assigned_to_guid, $date, $time, $created_at, $is_active, $outcome);
 
         if ($stmt->execute()) {
             echo json_encode(["success" => true, "message" => "Followup created"]);

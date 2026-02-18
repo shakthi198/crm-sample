@@ -26,7 +26,6 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import PageContainer from '../components/PageContainer';
 import DataTableCard from '../components/DataTableCard';
 import apiEndpoints from '../apiconfig';
-import { useAuth } from '../context/AuthContext';
 
 const API_URL = apiEndpoints.followup;
 const LEADS_API_URL = apiEndpoints.leads;
@@ -35,8 +34,7 @@ const USERS_API_URL = apiEndpoints.users;
 
 
 const Followups = () => {
-    const { user } = useAuth();
-    const token = user?.token;
+    const token = localStorage.getItem("token");
     console.log("Followups component - User:", token);
     // Initialize with empty array
     const [followups, setFollowups] = useState([]);
@@ -135,7 +133,6 @@ const Followups = () => {
             // If editing, include id/guid
             const payload = { ...followupData };
             if (currentFollowup) {
-                payload.id = currentFollowup.id;
                 payload.followup_guid = currentFollowup.followup_guid;
             }
 
@@ -171,7 +168,7 @@ const Followups = () => {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ id: id, status: newStatus }),
+                body: JSON.stringify({ followup_guid: id, status: newStatus }),
             });
 
             const data = await response.json();
@@ -195,7 +192,7 @@ const Followups = () => {
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${token}`,
                     },
-                    body: JSON.stringify({ id: id, action: 'delete' }), // Explicitly sending action in body too
+                    body: JSON.stringify({ followup_guid: id, action: 'delete' }), // Explicitly sending action in body too
                 });
 
                 const data = await response.json();
@@ -270,7 +267,7 @@ const Followups = () => {
                             {followups
                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                 .map((row) => (
-                                    <TableRow key={row.id} hover>
+                                    <TableRow key={row.followup_guid} hover>
                                         <TableCell>{row.lead_name}</TableCell>
                                         <TableCell align="center">{row.type}</TableCell>
                                         <TableCell align="center">{row.date}</TableCell>
@@ -308,7 +305,7 @@ const Followups = () => {
                                                     <IconButton
                                                         size="small"
                                                         color="success"
-                                                        onClick={() => handleStatusChange(row.id, 'Completed')}
+                                                        onClick={() => handleStatusChange(row.followup_guid, 'Completed')}
                                                         title="Mark as Completed"
                                                     >
                                                         <CheckCircleIcon fontSize="small" />
@@ -317,7 +314,7 @@ const Followups = () => {
                                                 <IconButton
                                                     size="small"
                                                     color="error"
-                                                    onClick={() => handleDelete(row.id)}
+                                                    onClick={() => handleDelete(row.followup_guid)}
                                                 >
                                                     <DeleteIcon fontSize="small" />
                                                 </IconButton>

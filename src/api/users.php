@@ -57,6 +57,12 @@ try {
     exit;
 }
 
+// Check for Organization-Guid header
+$headers = array_change_key_case(getallheaders(), CASE_LOWER);
+if (isset($headers['organization-guid']) && !empty($headers['organization-guid'])) {
+    $decoded->organization_guid = $headers['organization-guid'];
+}
+
 // Only Admin can manage users
 if (!isset($decoded->role) || (strcasecmp($decoded->role, "Admin") !== 0 && strcasecmp($decoded->role, "Super Admin") !== 0)) {
     http_response_code(403);
