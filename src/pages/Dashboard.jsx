@@ -42,6 +42,7 @@ import {
 
 //import dashboardData from '../data/dashboard.json'
 import LoadingSpinner from "../components/LoadingSpinner";
+import apiEndpoints from "../apiconfig";
 
 const COLORS = [
   "#3b82f6",
@@ -201,58 +202,126 @@ const Dashboard = () => {
     return cleanToken;
   };
 
-  const token =normalizeToken(localStorage.getItem("token"));
+  const token = normalizeToken(localStorage.getItem("token"));
 
-  useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        setLoading(true);
+  // ✅ ADDED: get organization guid from dropdown
+  const organizationGuid =
+    localStorage.getItem("organization_guid") || "";
 
-        const res = await fetch(
-          "http://localhost/crm/dashboard.php",
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            },
+
+
+ // ✅ GET organization_guid from localStorage
+const getOrganizationGuid = () => {
+  return localStorage.getItem("organization_guid") || "";
+};
+
+
+useEffect(() => {
+
+  // ✅ MAIN FETCH FUNCTION
+  const fetchDashboard = async () => {
+
+    try {
+
+      setLoading(true);
+
+      const orgGuid = getOrganizationGuid(); // always get latest value
+
+
+      const res = await fetch(
+        apiEndpoints.dashboard,
+        {
+
+          method: "GET",
+
+          headers: {
+
+            "Content-Type": "application/json",
+
+            ...(token && {
+              Authorization: `Bearer ${token}`
+            }),
+
+            // ✅ send organization guid
+            "Organization-Guid": orgGuid,
+
           },
-        );
 
-        const responseText = await res.text();
-        let payload = null;
-        try {
-          payload = responseText ? JSON.parse(responseText) : null;
-        } catch (parseErr) {
-          console.error(
-            "Dashboard response parse error:",
-            parseErr,
-            responseText,
-          );
-          setData(null);
-          return;
         }
+      );
 
-        if (res.ok && payload?.success) {
-          setData(payload.data);
-        } else {
-          console.error(
-            "Dashboard fetch failed",
-            res.status,
-            payload || responseText,
-          );
-          setData(null);
-        }
-      } catch (err) {
-        console.error("Dashboard error:", err);
-        setData(null);
-      } finally {
-        setLoading(false);
+
+      const payload = await res.json();
+
+
+      if (res.ok && payload?.success) {
+
+        setData(payload.data);
+
       }
-    };
+
+      else {
+
+        console.error("Dashboard failed", payload);
+
+        setData(null);
+
+      }
+
+    }
+
+    catch (err) {
+
+      console.error("Dashboard error:", err);
+
+      setData(null);
+
+    }
+
+    finally {
+
+      setLoading(false);
+
+    }
+
+  };
+
+
+
+  // ✅ CALL FIRST TIME
+  fetchDashboard();
+
+
+
+
+  // ✅ HANDLE DROPDOWN CHANGE EVENT
+  const handleOrganizationChanged = () => {
 
     fetchDashboard();
-  }, []);
+
+  };
+
+
+
+  window.addEventListener(
+    "organizationChanged",
+    handleOrganizationChanged
+  );
+
+
+
+  // ✅ CLEANUP
+  return () => {
+
+    window.removeEventListener(
+      "organizationChanged",
+      handleOrganizationChanged
+    );
+
+  };
+
+
+}, [token]); // ✅ ONLY token dependency
 
   return (
     <Box
@@ -645,9 +714,9 @@ const Dashboard = () => {
                     {(loading || !data
                       ? Array.from({ length: 5 })
                       : (data.today_followups_table || []).slice(
-                          page * rowsPerPage,
-                          page * rowsPerPage + rowsPerPage,
-                        )
+                        page * rowsPerPage,
+                        page * rowsPerPage + rowsPerPage,
+                      )
                     ).map((row, i) => (
                       <TableRow
                         key={i}

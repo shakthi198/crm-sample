@@ -21,6 +21,7 @@ import {
   Close as CloseIcon,
   CloudUpload as CloudUploadIcon,
   Business as BusinessIcon,
+  Assignment as StatusIcon,
 } from "@mui/icons-material";
 
 const ClientFormModal = ({
@@ -38,6 +39,7 @@ const ClientFormModal = ({
     lead_guid: "",
     contract_file: "",
     start_date: new Date().toISOString().split("T")[0],
+    status: "pending",
   });
 
   useEffect(() => {
@@ -47,12 +49,14 @@ const ClientFormModal = ({
           lead_guid: initialData.lead_guid,
           contract_file: initialData.contract_file || "Financial_Report.pdf",
           start_date: initialData.start_date,
+          status: initialData.status || "pending",
         });
       } else {
         setFormData({
           lead_guid: "",
           contract_file: "",
           start_date: new Date().toISOString().split("T")[0],
+          status: "pending",
         });
       }
     }
@@ -83,14 +87,13 @@ const ClientFormModal = ({
   };
 
   // Helper to check if lead is taken by another client
-const isLeadTaken = (leadId) => {
-  if (mode === "edit" && initialData && initialData.lead_id === leadId) {
-    return false;
-  }
+  const isLeadTaken = (leadId) => {
+    if (mode === "edit" && initialData && initialData.lead_id === leadId) {
+      return false;
+    }
 
-  return clients.some((c) => String(c.lead_id) === String(leadId));
-};
-
+    return clients.some((c) => String(c.lead_id) === String(leadId));
+  };
 
   // Helper to get display name
   const getFileName = () => {
@@ -290,6 +293,23 @@ const isLeadTaken = (leadId) => {
                 ),
               }}
             />
+          </InputCard>
+
+          {/* Row 2 Col 1: Status */}
+          <InputCard label="Status" icon={<StatusIcon />}>
+            <TextField
+              select
+              fullWidth
+              label="Status"
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              required
+            >
+              <MenuItem value="pending">Pending</MenuItem>
+              <MenuItem value="approved">Approved</MenuItem>
+              <MenuItem value="rejected">Rejected</MenuItem>
+            </TextField>
           </InputCard>
 
           {/* Row 2 Col 1: Upload Contract */}

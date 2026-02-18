@@ -9,7 +9,11 @@ import {
   useTheme,
   useMediaQuery,
   Dialog,
-  Button
+  Button,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -17,6 +21,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { alpha } from '@mui/material/styles';
 import UserProfileModal from './UserProfileModal';
+import apiEndpoints from '../apiconfig';
 
 const drawerWidth = 240;
 
@@ -29,6 +34,53 @@ const Navbar = ({ handleDrawerToggle }) => {
   // State for Logout Confirmation Modal
   const [openLogoutDialog, setOpenLogoutDialog] = useState(false);
   const [openProfileModal, setOpenProfileModal] = useState(false);
+
+  // Organizations Dropdown State
+  const [organizations, setOrganizations] = useState([]);
+  const [selectedOrganization, setSelectedOrganization] = useState(localStorage.getItem('organization_guid') || '');
+
+  React.useEffect(() => {
+    if (user?.role === 'Admin') {
+      const fetchOrganizations = async () => {
+        try {
+          const response = await fetch(apiEndpoints.organizations, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+          const data = await response.json();
+          if (data.success && Array.isArray(data.data)) {
+            setOrganizations(data.data);
+
+            // Set default if not already selected
+            if (!selectedOrganization && data.data.length > 0) {
+              const defaultOrg = data.data[0].organization_guid;
+              setSelectedOrganization(defaultOrg);
+              localStorage.setItem('organization_guid', defaultOrg);
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching organizations:", error);
+        }
+      };
+      fetchOrganizations();
+    }
+  }, [user]);
+
+  const handleOrganizationChange = (event) => {
+
+    const orgGuid = event.target.value;
+
+    setSelectedOrganization(orgGuid);
+
+    localStorage.setItem("organization_guid", orgGuid);
+
+    // ✅ This is enough
+    window.dispatchEvent(new Event("organizationChanged"));
+
+  };
+
+
 
   const handleLogoutClick = (e) => {
     e.stopPropagation();
@@ -97,6 +149,53 @@ const Navbar = ({ handleDrawerToggle }) => {
         </Box>
 
         <Box sx={{ flexGrow: 1 }} />
+
+        {/* Organizations Dropdown - Admin Only */}
+        {user?.role === 'Admin' && (
+          <FormControl
+            size="small"
+            sx={{
+              mr: 2,
+              minWidth: 200,
+              display: { xs: 'none', md: 'flex' } // Hide on mobile if needed, or adjust
+            }}
+          >
+            <Select
+              value={selectedOrganization}
+              onChange={handleOrganizationChange}
+              displayEmpty
+              variant="outlined"
+              sx={{
+                color: '#FFFFFF',
+                '.MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(255, 255, 255, 0.3)',
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(255, 255, 255, 0.5)',
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#FFFFFF',
+                },
+                '.MuiSvgIcon-root': {
+                  color: '#FFFFFF',
+                },
+                height: 40,
+                borderRadius: '8px',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)'
+              }}
+              inputProps={{ 'aria-label': 'Select Organization' }}
+            >
+              <MenuItem value="" disabled>
+                <em>Select Organization</em>
+              </MenuItem>
+              {organizations.map((org) => (
+                <MenuItem key={org.organization_guid} value={org.organization_guid}>
+                  {org.company_name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
 
         {/* User Info Section - CLICKABLE */}
         <Box

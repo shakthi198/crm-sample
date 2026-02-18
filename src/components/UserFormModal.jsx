@@ -26,18 +26,123 @@ import {
     ToggleOn as StatusIcon,
     Close as CloseIcon
 } from '@mui/icons-material';
+import apiEndpoints from '../apiconfig';
 
-const ROLES = [
-    'Super Admin',
-    'Admin',
-    'Manager',
-    'Telecaller',
-    'Finance'
-];
+const InputCard = ({ label, icon, children, sx }) => {
+
+    const theme = useTheme(); // ✅ THIS LINE FIXES ERROR
+
+    return (
+
+        <Box
+            sx={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1.5,
+                p: 2,
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: '12px',
+                bgcolor: 'background.paper',
+                transition: 'all 0.2s',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+
+                '&:hover': {
+                    borderColor: theme.palette.primary.main,
+                    boxShadow: '0 4px 12px rgba(61, 82, 160, 0.08)'
+                },
+
+                ...sx
+            }}
+        >
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+
+                <Box
+                    sx={{
+                        color: theme.palette.primary.main,
+                        bgcolor: alpha(theme.palette.primary.main, 0.1),
+                        p: 0.5,
+                        borderRadius: '6px'
+                    }}
+                >
+
+                    {React.cloneElement(icon, { fontSize: 'small' })}
+
+                </Box>
+
+                <Typography
+                    variant="caption"
+                    fontWeight={600}
+                    color="text.secondary"
+                >
+
+                    {label}
+
+                </Typography>
+
+            </Box>
+
+            {children}
+
+        </Box>
+
+    );
+
+};
+
 
 const UserFormModal = ({ open, onClose, onSave, initialData, mode }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+    const [roles, setRoles] = useState([]);
+
+    useEffect(() => {
+
+        const fetchRoles = async () => {
+
+            try {
+
+                const token = localStorage.getItem("token");
+
+                const response = await fetch(
+                    apiEndpoints.roles,
+                    {
+                        method: "GET",
+
+                        headers: {
+
+                            "Content-Type": "application/json",
+
+                            "Authorization": `Bearer ${token}`
+
+                        }
+                    }
+                );
+
+
+                const data = await response.json();
+
+                setRoles(data.data || []);
+
+
+            }
+            catch(error) {
+
+                console.error("Error fetching roles:", error);
+
+            }
+
+        };
+
+        if(open){
+        fetchRoles();
+        }
+
+    }, [open]);
+
 
     const [formData, setFormData] = useState({
         name: '',
@@ -50,27 +155,37 @@ const UserFormModal = ({ open, onClose, onSave, initialData, mode }) => {
     const [errors, setErrors] = useState({});
 
     useEffect(() => {
-        if (open) {
-            if (mode === 'edit' && initialData) {
-                setFormData({
-                    name: initialData.name || '',
-                    email: initialData.email || '',
-                    password: '', // Password not shown on edit
-                    role: initialData.role || '',
-                    status: initialData.status || 'Active'
-                });
-            } else {
-                setFormData({
-                    name: '',
-                    email: '',
-                    password: '',
-                    role: '',
-                    status: 'Active'
-                });
-            }
-            setErrors({});
+
+        if (!open) return;
+
+        if (mode === 'edit' && initialData) {
+
+            setFormData({
+                name: initialData.name || '',
+                email: initialData.email || '',
+                password: '',
+                role: initialData.role_guid || '', // IMPORTANT change
+                status: initialData.status || 'Active'
+            });
+
         }
-    }, [open, mode, initialData]);
+        else if (mode === 'add') {
+
+            setFormData({
+                name: '',
+                email: '',
+                password: '',
+                role: '',
+                status: 'Active'
+            });
+
+        }
+
+        setErrors({});
+
+    }, [open]);  // ✅ ONLY open
+
+
 
     const handleChange = (e) => {
         const { name, value, checked } = e.target;
@@ -102,53 +217,34 @@ const UserFormModal = ({ open, onClose, onSave, initialData, mode }) => {
     };
 
     const handleSubmit = () => {
+
         if (validate()) {
-            onSave(formData);
+
+            const payload = {
+
+                name: formData.name,
+
+                email: formData.email,
+
+                password: formData.password,
+
+                role_guid: formData.role,   // ✅ MUST BE role_guid
+
+                organization_guid: localStorage.getItem("organization_guid")
+
+            };
+
+            console.log("Sending payload:", payload);
+
+            onSave(payload);
+
         }
+
     };
 
+
     // Card wrapper for inputs
-    const InputCard = ({ label, icon, children, sx }) => (
-        <Box
-            sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 1.5,
-                p: 2,
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: '12px',
-                bgcolor: 'background.paper',
-                transition: 'all 0.2s',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
-                '&:hover': {
-                    borderColor: theme.palette.primary.main,
-                    boxShadow: '0 4px 12px rgba(61, 82, 160, 0.08)'
-                },
-                ...sx
-            }}
-        >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Box sx={{
-                    color: theme.palette.primary.main,
-                    display: 'flex',
-                    alignItems: 'center',
-                    bgcolor: alpha(theme.palette.primary.main, 0.1),
-                    p: 0.5,
-                    borderRadius: '6px'
-                }}>
-                    {React.cloneElement(icon, { fontSize: 'small' })}
-                </Box>
-                <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    {label}
-                </Typography>
-            </Box>
-            <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                {children}
-            </Box>
-        </Box>
-    );
+    
 
     return (
         <Dialog
@@ -239,21 +335,35 @@ const UserFormModal = ({ open, onClose, onSave, initialData, mode }) => {
 
                     {/* Row 2 Col 2: Role */}
                     <InputCard label="Role" icon={<RoleIcon />}>
-                        <FormControl fullWidth error={!!errors.role}>
-                            <Select
-                                name="role"
-                                value={formData.role}
-                                onChange={handleChange}
-                                sx={{ height: '48px' }}
-                            >
-                                {ROLES.map((role) => (
-                                    <MenuItem key={role} value={role}>
-                                        {role}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
+
+                    <FormControl fullWidth error={!!errors.role}>
+
+                    <Select
+                        name="role"
+                        value={formData.role}
+                        onChange={handleChange}
+                        sx={{ height: '48px' }}
+                    >
+
+                    {Array.isArray(roles) && roles.map((role) => (
+
+                    <MenuItem
+                    key={role.role_guid}
+                    value={role.role_guid}
+                    >
+
+                    {role.role_name}
+
+                    </MenuItem>
+
+                    ))}
+
+                    </Select>
+
+                    </FormControl>
+
                     </InputCard>
+
 
                     {/* Row 3 Col 1: Status */}
                     <InputCard label="User Status" icon={<StatusIcon />}>

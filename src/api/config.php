@@ -15,7 +15,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS
 $host = "localhost";
 $user = "root";
 $password = "";
-$dbname = "crm";
+$dbname = "crm_db";
 
 $jwt_secret = "hotalmanagement_150901";
 $jwt_algorithm = "HS256";

@@ -1,6 +1,6 @@
 import { Droplet } from "lucide-react";
 
-const API_BASE_URL = "http://localhost/crm/api";
+const API_BASE_URL = "http://localhost/crm_db/api";
 const apiEndpoints = {
     baseUrl: API_BASE_URL,
     login: `${API_BASE_URL}/login.php`,
@@ -14,6 +14,7 @@ const apiEndpoints = {
     leads: `${API_BASE_URL}/leads.php`,
     usersdropdown: `${API_BASE_URL}/users_dropdown.php`,
     dropdown: `${API_BASE_URL}/dropdown.php`,
+    dashboard: `${API_BASE_URL}/dashboard.php`,
 };
 
 export default apiEndpoints;

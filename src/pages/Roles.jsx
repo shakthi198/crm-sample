@@ -41,6 +41,7 @@ const Roles = () => {
     let headers = { "Content-Type": "application/json" };
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
+      headers["Organization-Guid"] = localStorage.getItem("organization_guid") || "";
     }
     return headers;
   };

@@ -58,7 +58,7 @@ const Leads = () => {
 
     const getToken = () => {
         // Prioritize crm_token as it's the one set by AuthContext
-        const token =localStorage.getItem("token");
+        const token = localStorage.getItem("token");
 
         if (!token || token === "null" || token === "undefined") {
             return null;
@@ -86,6 +86,7 @@ const Leads = () => {
 
                 headers: {
                     Authorization: `Bearer ${token}`,
+                    "Organization-Guid": localStorage.getItem("organization_guid") || "",
                 },
             });
 
@@ -108,8 +109,25 @@ const Leads = () => {
     };
 
     useEffect(() => {
+
         fetchLeads();
+
+        const handleOrgChange = () => {
+
+            fetchLeads();
+
+        };
+
+        window.addEventListener("organizationChanged", handleOrgChange);
+
+        return () => {
+
+            window.removeEventListener("organizationChanged", handleOrgChange);
+
+        };
+
     }, []);
+
 
     /* =========================
          OPEN / CLOSE DIALOG
@@ -165,6 +183,7 @@ const Leads = () => {
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
+                    "Organization-Guid": localStorage.getItem("organization_guid") || "",
                 },
 
                 body: JSON.stringify(bodyData),
@@ -208,6 +227,7 @@ const Leads = () => {
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
+                    "Organization-Guid": localStorage.getItem("organization_guid") || "",
                 },
 
                 body: JSON.stringify({ id }),

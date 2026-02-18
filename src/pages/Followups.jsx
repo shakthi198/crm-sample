@@ -54,6 +54,7 @@ const Followups = () => {
                 method: "GET",
                 headers: {
                     Authorization: `Bearer ${token}`,
+                    "Organization-Guid": localStorage.getItem("organization_guid") || "",
                 },
             });
             const data = await response.json();
@@ -72,6 +73,7 @@ const Followups = () => {
             const response = await fetch(LEADS_API_URL, {
                 headers: {
                     Authorization: `Bearer ${token}`,
+                    "Organization-Guid": localStorage.getItem("organization_guid") || "",
                 },
             });
             const data = await response.json();
@@ -89,6 +91,7 @@ const Followups = () => {
             const response = await fetch(USERS_API_URL, {
                 headers: {
                     Authorization: `Bearer ${token}`,
+                    "Organization-Guid": localStorage.getItem("organization_guid") || "",
                 },
             });
             const data = await response.json();
@@ -144,6 +147,7 @@ const Followups = () => {
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
+                    "Organization-Guid": localStorage.getItem("organization_guid") || "",
                 },
                 body: JSON.stringify(payload),
             });
@@ -170,6 +174,7 @@ const Followups = () => {
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
+                    "Organization-Guid": localStorage.getItem("organization_guid") || "",
                 },
                 body: JSON.stringify({ id: id, status: newStatus }),
             });
@@ -194,6 +199,7 @@ const Followups = () => {
                     headers: {
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${token}`,
+                        "Organization-Guid": localStorage.getItem("organization_guid") || "",
                     },
                     body: JSON.stringify({ id: id, action: 'delete' }), // Explicitly sending action in body too
                 });

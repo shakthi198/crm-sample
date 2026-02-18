@@ -43,6 +43,7 @@ const Users = () => {
         let headers = { 'Content-Type': 'application/json' };
         if (user && user.token) {
             headers['Authorization'] = `Bearer ${user.token}`;
+            headers['Organization-Guid'] = localStorage.getItem('organization_guid') || '';
         }
         return headers;
     };
@@ -124,13 +125,13 @@ const Users = () => {
     const handleSaveUser = async (formData) => {
         try {
             if (modalMode === 'add') {
-                await fetch(`${BASE_URL}/users.php`, {
+                await fetch(apiEndpoints.create, {
                     method: 'POST',
                     headers: getHeaders(),
                     body: JSON.stringify(formData)
                 });
             } else {
-                await fetch(`${BASE_URL}/users.php`, {
+                await fetch(apiEndpoints.users, {
                     method: 'POST', // Backend often uses POST for updates
                     headers: getHeaders(),
                     body: JSON.stringify({ ...formData, user_guid: currentUser.user_guid })
@@ -147,7 +148,7 @@ const Users = () => {
     const handleConfirmDelete = async () => {
         if (deleteId) {
             try {
-                await fetch(`${BASE_URL}/users.php?user_guid=${deleteId}`, {
+                await fetch(`${apiEndpoints.users}?user_guid=${deleteId}`, {
                     method: 'DELETE',
                     headers: getHeaders()
                 });

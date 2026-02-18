@@ -42,6 +42,7 @@ const BudgetPage = () => {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
+            "Organization-Guid": localStorage.getItem("organization_guid") || "",
           },
         },
       );
@@ -107,6 +108,7 @@ const BudgetPage = () => {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
+            "Organization-Guid": localStorage.getItem("organization_guid") || "",
           },
           body: JSON.stringify(budgetData),
         },
@@ -157,6 +159,7 @@ const BudgetPage = () => {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
+            "Organization-Guid": localStorage.getItem("organization_guid") || "",
           },
           body: JSON.stringify(payload),
         },

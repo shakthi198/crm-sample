@@ -31,7 +31,13 @@ export const AuthProvider = ({ children }) => {
                 };
                 setUser(newUser);
                 localStorage.setItem('crm_user', JSON.stringify(newUser));
-                localStorage.setItem('token',newUser.token);
+                localStorage.setItem('token', newUser.token);
+
+                // Store organization_guid for strict isolation header
+                if (data.organization_guid) {
+                    localStorage.setItem('organization_guid', data.organization_guid);
+                }
+
                 return true;
             } else {
                 throw new Error(data.error || 'Login failed');
@@ -45,6 +51,7 @@ export const AuthProvider = ({ children }) => {
     const logout = () => {
         localStorage.removeItem('crm_user');
         localStorage.removeItem('token');
+        localStorage.removeItem('organization_guid');
         setUser(null);
     };
 

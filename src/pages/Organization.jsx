@@ -34,6 +34,7 @@ import {
   Close as CloseIcon,
 } from "@mui/icons-material";
 import PageContainer from "../components/PageContainer";
+import apiEndpoints from "../apiconfig";
 
 const emptyFormData = {
   company_name: "",
@@ -135,8 +136,8 @@ const Organization = () => {
       ? normalizedToken
       : normalizeToken(fallbackToken);
   const organizationsApiUrl =
-    "http://localhost/crm/organizations.php";
-
+    apiEndpoints.organizations;
+    
   const [organizations, setOrganizations] = useState([]);
   const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);

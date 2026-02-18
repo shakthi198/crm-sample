@@ -64,15 +64,15 @@ $admin_guid = $userData->admin_guid ?? null;
 switch ($method) {
 
     case "GET":
-        getOrganizations($conn);
+        getOrganizations($conn, $user_guid);
         break;
 
     case "POST":
-        createOrganization($conn, $user_guid, $admin_guid, $input);
+        createOrganization($conn, $user_guid, $input);
         break;
 
     case "PUT":
-        updateOrganization($conn, $admin_guid, $input);
+        updateOrganization($conn, $user_guid, $input);
         break;
 
     case "DELETE":
@@ -92,7 +92,7 @@ switch ($method) {
    📌 GET ORGANIZATIONS
 ========================================= */
 
-function getOrganizations($conn)
+function getOrganizations($conn, $user_guid)
 {
     $organization_guid = $_GET['organization_guid'] ?? null;
 
@@ -108,10 +108,11 @@ function getOrganizations($conn)
                     created_at
                 FROM organizations 
                 WHERE organization_guid = ? 
+                AND user_guid = ?
                 AND is_active = 1";
 
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("s", $organization_guid);
+        $stmt->bind_param("ss", $organization_guid, $user_guid);
 
     } else {
 
@@ -124,10 +125,12 @@ function getOrganizations($conn)
                     physical_address,
                     created_at
                 FROM organizations 
-                WHERE is_active = 1
+                WHERE user_guid = ?
+                AND is_active = 1
                 ORDER BY created_at DESC";
 
         $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $user_guid);
     }
 
     $stmt->execute();
@@ -148,7 +151,7 @@ function getOrganizations($conn)
    📌 CREATE ORGANIZATION
 ========================================= */
 
-function createOrganization($conn, $user_guid, $admin_guid, $data)
+function createOrganization($conn, $user_guid, $data)
 {
     if (empty($data['company_name'])) {
         http_response_code(400);
@@ -169,20 +172,20 @@ function createOrganization($conn, $user_guid, $admin_guid, $data)
     $status = "Active";
     $is_active = 1;
 
+    // Removed admin_guid from INSERT
     $sql = "INSERT INTO organizations 
-            (organization_guid, company_name, status, is_active, user_guid, admin_guid, email, phone_number, physical_address)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            (organization_guid, company_name, status, is_active, user_guid, email, phone_number, physical_address)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
     $stmt = $conn->prepare($sql);
 
     $stmt->bind_param(
-        "sssisssss",
+        "sssissss",
         $organization_guid,
         $company_name,
         $status,
         $is_active,
         $user_guid,
-        $admin_guid,
         $email,
         $phone_number,
         $physical_address
@@ -202,7 +205,7 @@ function createOrganization($conn, $user_guid, $admin_guid, $data)
    📌 UPDATE ORGANIZATION
 ========================================= */
 
-function updateOrganization($conn, $admin_guid, $data)
+function updateOrganization($conn, $user_guid, $data)
 {
     if (empty($data['organization_guid'])) {
         http_response_code(400);
@@ -213,14 +216,17 @@ function updateOrganization($conn, $admin_guid, $data)
         return;
     }
 
+    // Ensure user owns the organization before update (optional but good security)
+    // For now, simpler update:
+
     $sql = "UPDATE organizations 
             SET company_name = ?, 
                 status = ?, 
                 email = ?, 
                 phone_number = ?, 
-                physical_address = ?, 
-                admin_guid = ?
+                physical_address = ?
             WHERE organization_guid = ?
+            AND user_guid = ?
             AND is_active = 1";
 
     $stmt = $conn->prepare($sql);
@@ -232,8 +238,8 @@ function updateOrganization($conn, $admin_guid, $data)
         $data['email'],
         $data['phone_number'],
         $data['physical_address'],
-        $admin_guid,
-        $data['organization_guid']
+        $data['organization_guid'],
+        $user_guid
     );
 
     $stmt->execute();
