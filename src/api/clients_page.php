@@ -102,8 +102,9 @@ if ($method === 'GET') {
             l.company,
             l.phone,
             l.email,  
-            l.status,
-            l.organization_guid
+            l.status AS lead_status,
+            l.organization_guid,
+            c.status
 
         FROM clients c
         JOIN leads l ON c.lead_guid = l.lead_guid
@@ -137,6 +138,7 @@ if ($method === 'POST') {
     $client_guid = $_POST['client_guid'] ?? null;
     $lead_guid = $_POST['lead_guid'] ?? null;
     $start_date = $_POST['start_date'] ?? null;
+    $status = $_POST['status'] ?? 'pending';
 
     // ---------------------------------------------------
     // UPDATE EXISTING CLIENT
@@ -144,9 +146,9 @@ if ($method === 'POST') {
     if ($client_guid) {
 
         // 1. Prepare base query
-        $query = "UPDATE clients SET start_date = ? WHERE client_guid = ? AND organization_guid = ?";
-        $params = [$start_date, $client_guid, $organization_guid];
-        $types = "sss";
+        $query = "UPDATE clients SET start_date = ?, status = ? WHERE client_guid = ? AND organization_guid = ?";
+        $params = [$start_date, $status, $client_guid, $organization_guid];
+        $types = "ssss";
 
         // 2. Handle File Upload if new file provided
         if (isset($_FILES['contract_file']) && $_FILES['contract_file']['error'] === 0) {
@@ -161,9 +163,9 @@ if ($method === 'POST') {
                 $contract_path = "uploads/contracts/" . $fileName;
 
                 // Update query to include file
-                $query = "UPDATE clients SET start_date = ?, contract_file = ? WHERE client_guid = ? AND organization_guid = ?";
-                $params = [$start_date, $contract_path, $client_guid, $organization_guid];
-                $types = "ssss";
+                $query = "UPDATE clients SET start_date = ?, status = ?, contract_file = ? WHERE client_guid = ? AND organization_guid = ?";
+                $params = [$start_date, $status, $contract_path, $client_guid, $organization_guid];
+                $types = "sssss";
             }
         }
 
@@ -211,8 +213,8 @@ if ($method === 'POST') {
         }
     }
 
-    $stmt = $conn->prepare("INSERT INTO clients (client_guid, organization_guid, lead_guid, contract_file, start_date) VALUES (?, ?, ?, ?, ?)");
-    $stmt->bind_param("sssss", $client_guid, $organization_guid, $lead_guid, $contract_path, $start_date);
+    $stmt = $conn->prepare("INSERT INTO clients (client_guid, organization_guid, lead_guid, contract_file, start_date, status) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssssss", $client_guid, $organization_guid, $lead_guid, $contract_path, $start_date, $status);
 
     if ($stmt->execute()) {
         echo json_encode(["success" => true, "message" => "Client created successfully", "client_guid" => $client_guid]);

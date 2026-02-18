@@ -23,7 +23,6 @@ const AVAILABLE_PERMISSIONS = [
     'Followups',
     'Clients',
     'Budgets',
-    'Reports',
     'Settings'
 ];
 
