@@ -34,6 +34,7 @@ import {
   Close as CloseIcon,
 } from "@mui/icons-material";
 import PageContainer from "../components/PageContainer";
+import apiEndpoints from "../apiconfig";
 
 const emptyFormData = {
   company_name: "",
@@ -126,16 +127,15 @@ const normalizeToken = (rawToken) => {
 };
 
 const Organization = () => {
-  const fallbackToken =
-    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3NzA4MDM4NDYsIm9yZ2FuaXphdGlvbl9ndWlkIjoiNDljNGMxMjItMDcxOC0xMWYxLTljNDItZTIxYWQ4ZjAyYjA0IiwiYWRtaW5fZ3VpZCI6IjQ5YzRjMWM2LTA3MTgtMTFmMS05YzQyLWUyMWFkOGYwMmIwNCIsInVzZXJuYW1lIjoiYWRtaW4iLCJyb2xlIjoiQWRtaW4iLCJpc19hY3RpdmUiOjF9.haZqmTOMh4bBXS-3AhsCGxtfAqmTAm_pZqeA14o2izc";
-  const token = localStorage.getItem("token") || fallbackToken;
+  
+  const token = localStorage.getItem("token");
   const normalizedToken = normalizeToken(token);
   const authToken =
     normalizedToken.split(".").length === 3
       ? normalizedToken
-      : normalizeToken(fallbackToken);
+      : localStorage.getItem("token");
   const organizationsApiUrl =
-    "http://localhost/crm/organizations.php";
+    `${apiEndpoints.organizations}`;
 
   const [organizations, setOrganizations] = useState([]);
   const [addOpen, setAddOpen] = useState(false);

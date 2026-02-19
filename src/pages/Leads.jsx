@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-
+import { useSnackbar } from "../context/SnackbarContext";
 import {
   Box,
   Typography,
@@ -58,7 +58,7 @@ const Leads = () => {
   /* =========================
          GET TOKEN SAFE
       ========================= */
-
+const { showSnackbar } = useSnackbar();
   const getToken = () => {
     // Prioritize crm_token as it's the one set by AuthContext
     const token = localStorage.getItem("token");
@@ -193,8 +193,9 @@ const Leads = () => {
         await fetchLeads();
 
         handleCloseDialog();
+        showSnackbar(`Lead ${dialogMode === "add" ? "added" : "updated"} successfully`, "success");
       } else {
-        setError(result.error || "Save failed");
+        showSnackbar(result.error || "Failed to save lead", "error");
       }
     } catch (err) {
       console.error(err);
@@ -235,11 +236,12 @@ const Leads = () => {
 
       if (result.success) {
         fetchLeads();
+        showSnackbar("Lead deleted successfully", "success");
       } else {
-        setError(result.error || "Delete failed");
+        showSnackbar(result.error || "Failed to delete lead", "error");
       }
     } catch (err) {
-      setError("Delete failed");
+      showSnackbar("Error deleting lead", "error");
     } finally {
       setLoading(false);
     }

@@ -135,7 +135,8 @@ const LeadForm = ({ open, onClose, onSave, initialData, mode }) => {
                 // Using apiEndpoints to stay consistent with other fetch calls
                 const res = await fetch(apiEndpoints.usersdropdown, {
                     headers: {
-                        Authorization: `Bearer ${localStorage.getItem("token")}`
+                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                        "Organization-Guid": localStorage.getItem("organization_guid")
                     }
                 });
                 const data = await res.json();
