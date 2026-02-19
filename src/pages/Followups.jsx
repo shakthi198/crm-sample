@@ -27,6 +27,7 @@ import PageContainer from "../components/PageContainer";
 import DataTableCard from "../components/DataTableCard";
 import apiEndpoints from "../apiconfig";
 import { useAuth } from "../context/AuthContext";
+import { useSnackbar } from "../context/SnackbarContext";
 
 const API_URL = apiEndpoints.followup;
 const LEADS_API_URL = apiEndpoints.leads;
@@ -35,7 +36,7 @@ const USERS_API_URL = apiEndpoints.users;
 const Followups = () => {
   const { user } = useAuth();
   const token = user?.token;
-  console.log("Followups component - User:", token);
+  const { showSnackbar } = useSnackbar();
   // Initialize with empty array
   const [followups, setFollowups] = useState([]);
   const [page, setPage] = useState(0);
@@ -172,12 +173,13 @@ useEffect(() => {
       if (data.success) {
         fetchFollowups(); // Refresh list
         handleCloseModal();
+        showSnackbar(`Follow-up ${currentFollowup ? "updated" : "created"} successfully`, "success");
       } else {
-        alert("Failed to save followup: " + (data.message || "Unknown error"));
+        showSnackbar("Failed to save follow-up: " + (data.message || "Unknown error"), "error");
       }
     } catch (error) {
       console.error("Save error:", error);
-      alert("Error saving followup");
+      showSnackbar("Error saving follow-up", "error");
     }
   };
 
@@ -197,11 +199,13 @@ useEffect(() => {
       const data = await response.json();
       if (data.success) {
         fetchFollowups();
+        showSnackbar("Status updated successfully", "success");
       } else {
-        alert("Failed to update status");
+        showSnackbar("Failed to update status: " + (data.message || "Unknown error"), "error");
       }
     } catch (error) {
       console.error("Status update error:", error);
+      showSnackbar("Error updating status", "error");
     }
   };
 
@@ -224,11 +228,13 @@ useEffect(() => {
 
         if (data.success) {
           fetchFollowups();
+          showSnackbar("Follow-up deleted successfully", "success");
         } else {
-          alert("Failed to delete: " + (data.message || "Unknown error"));
+          showSnackbar("Failed to delete follow-up: " + (data.message || "Unknown error"), "error");
         }
       } catch (error) {
         console.error("Delete error:", error);
+        showSnackbar("Error deleting follow-up", "error");
       }
     }
   };

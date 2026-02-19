@@ -16,6 +16,7 @@ import AssignmentIcon from "@mui/icons-material/Assignment";
 import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import BusinessIcon from "@mui/icons-material/Business";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
+
 import { useAuth } from "../context/AuthContext";
 import { Link, useLocation } from "react-router-dom";
 
@@ -51,7 +52,18 @@ const menuItems = [
     path: "/organization",
     module: "Organization",
   },
-
+  {
+    text: "Attendance",
+    icon: <AssignmentIcon />,
+    path: "/attendance",
+    module: "Attendance",
+  },
+  {
+    text: "Payroll",
+    icon: <MonetizationOnIcon />,
+    path: "/payroll",
+    module: "Payroll",
+  },
   {
     text: "Roles & Permissions",
     icon: <AdminPanelSettingsIcon />,
@@ -140,7 +152,7 @@ const hasAccess = (moduleName) => {
             return (
               <React.Fragment key={item.text}>
                 {/* Parent Title */}
-                <ListItem sx={{ mt: 1 }}>
+                <ListItem sx={{ mt: 0}}>
                   <ListItemText
                     primary={item.text}
                     primaryTypographyProps={{
@@ -157,7 +169,7 @@ const hasAccess = (moduleName) => {
                   const isActive = location.pathname.startsWith(child.path);
 
                   return (
-                    <ListItem key={child.text} disablePadding sx={{ mb: 0.5 }}>
+                    <ListItem key={child.text} disablePadding sx={{ mb: 0 }}>
                       <ListItemButton
                         component={Link}
                         to={child.path}
@@ -194,7 +206,7 @@ const hasAccess = (moduleName) => {
           const isActive = location.pathname.startsWith(item.path);
 
           return (
-            <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
+            <ListItem key={item.text} disablePadding sx={{ mb: 0}}>
               <ListItemButton
                 component={Link}
                 to={item.path}
