@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-$conn = new mysqli("localhost", "root", "", "crm");
+$conn = new mysqli("localhost", "root", "", "crm_sample");
 
 if ($conn->connect_error) {
 

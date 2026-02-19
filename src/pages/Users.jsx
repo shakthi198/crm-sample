@@ -43,6 +43,8 @@ const Users = () => {
     let headers = { "Content-Type": "application/json" };
     if (user && user.token) {
       headers["Authorization"] = `Bearer ${user.token}`;
+      headers["Organization-Guid"] =
+        localStorage.getItem("organization_guid") || "";
     }
     return headers;
   };

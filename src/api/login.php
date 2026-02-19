@@ -212,6 +212,7 @@ echo json_encode([
     "token" => $token,
     "role" => $user['role_name'],
     "username" => $user['name'],
+    "organization_guid" => $user['organization_guid'],
     "permissions" => $permissions,  // ✅ shown in response
 ]);
 

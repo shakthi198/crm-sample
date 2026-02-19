@@ -42,6 +42,7 @@ import {
 
 //import dashboardData from '../data/dashboard.json'
 import LoadingSpinner from "../components/LoadingSpinner";
+import apiEndpoints from "../apiconfig";
 
 const COLORS = [
   "#3b82f6",
@@ -201,58 +202,75 @@ const Dashboard = () => {
     return cleanToken;
   };
 
-  const token =normalizeToken(localStorage.getItem("token"));
+  const token = normalizeToken(localStorage.getItem("token"));
+
+  // ✅ ADDED: get organization guid from dropdown
+  const organizationGuid = localStorage.getItem("organization_guid") || "";
+
+  // ✅ GET organization_guid from localStorage
+  const getOrganizationGuid = () => {
+    return localStorage.getItem("organization_guid") || "";
+  };
 
   useEffect(() => {
+    // ✅ MAIN FETCH FUNCTION
     const fetchDashboard = async () => {
       try {
         setLoading(true);
 
-        const res = await fetch(
-          "http://localhost/crm/dashboard.php",
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            },
-          },
-        );
+        const orgGuid = getOrganizationGuid(); // always get latest value
 
-        const responseText = await res.text();
-        let payload = null;
-        try {
-          payload = responseText ? JSON.parse(responseText) : null;
-        } catch (parseErr) {
-          console.error(
-            "Dashboard response parse error:",
-            parseErr,
-            responseText,
-          );
-          setData(null);
-          return;
-        }
+        const res = await fetch(apiEndpoints.dashboard, {
+          method: "GET",
+
+          headers: {
+            "Content-Type": "application/json",
+
+            ...(token && {
+              Authorization: `Bearer ${token}`,
+            }),
+
+            // ✅ send organization guid
+            "Organization-Guid": orgGuid,
+          },
+        });
+
+        const payload = await res.json();
 
         if (res.ok && payload?.success) {
           setData(payload.data);
         } else {
-          console.error(
-            "Dashboard fetch failed",
-            res.status,
-            payload || responseText,
-          );
+          console.error("Dashboard failed", payload);
+
           setData(null);
         }
       } catch (err) {
         console.error("Dashboard error:", err);
+
         setData(null);
       } finally {
         setLoading(false);
       }
     };
 
+    // ✅ CALL FIRST TIME
     fetchDashboard();
-  }, []);
+
+    // ✅ HANDLE DROPDOWN CHANGE EVENT
+    const handleOrganizationChanged = () => {
+      fetchDashboard();
+    };
+
+    window.addEventListener("organizationChanged", handleOrganizationChanged);
+
+    // ✅ CLEANUP
+    return () => {
+      window.removeEventListener(
+        "organizationChanged",
+        handleOrganizationChanged,
+      );
+    };
+  }, [token]); // ✅ ONLY token dependency
 
   return (
     <Box
@@ -538,7 +556,7 @@ const Dashboard = () => {
                             dataKey="revenue"
                             stroke="#3b82f6"
                             strokeWidth={3}
-                            dot={{ r: 0 }}
+                            dot={{ r: 5 }}
                             activeDot={{ r: 6, strokeWidth: 0 }}
                           />
                         </LineChart>
@@ -627,7 +645,7 @@ const Dashboard = () => {
                           py: 2,
                         }}
                       >
-                        NEXT ACTION
+                        DATE
                       </TableCell>
                       <TableCell
                         sx={{
@@ -666,7 +684,7 @@ const Dashboard = () => {
                             <TableCell
                               sx={{ fontWeight: 600, color: "#334155" }}
                             >
-                              {row.lead_name}
+                              {row.client_name}
                             </TableCell>
                             <TableCell sx={{ color: "#64748b" }}>
                               {row.phone}
@@ -674,8 +692,8 @@ const Dashboard = () => {
                             <TableCell>
                               <Chip
                                 size="small"
-                                label={row.call_status}
-                                color={getStatusColor(row.call_status)}
+                                label={row.status}
+                                color={getStatusColor(row.status)}
                                 sx={{
                                   fontWeight: 600,
                                   borderRadius: "6px",
@@ -686,7 +704,7 @@ const Dashboard = () => {
                               />
                             </TableCell>
                             <TableCell sx={{ color: "#64748b" }}>
-                              {row.next_followup_date}
+                              {row.date}
                             </TableCell>
                             <TableCell sx={{ color: "#64748b" }}>
                               {row.assigned_to}

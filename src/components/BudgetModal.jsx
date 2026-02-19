@@ -94,13 +94,23 @@ const BudgetModal = ({ open, onClose, onSave, budget }) => {
 
     const fetchLeads = async () => {
       try {
-        const res = await fetch(
-          `${apiEndpoints.dropdown}?table=leads`,
-        );
+        const token = localStorage.getItem("token");
+        const orgGuid = localStorage.getItem("organization_guid");
+        const res = await fetch(`${apiEndpoints.dropdown}?table=leads`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            "Organization-Guid": orgGuid,
+          },
+        });
         const data = await res.json();
 
         if (data.success) {
           setLeads(data.data);
+        } else {
+          console.error("Dropdown error:", data.error);
+          setLeads([]);
         }
       } catch (err) {
         console.error(err);

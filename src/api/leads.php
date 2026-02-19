@@ -1,7 +1,8 @@
 <?php
 
 /* =========================
-   ERROR REPORTING (IMPORTANT)
+   ERROR REPORTING (KEEP FOR DEBUG ONLY)
+   CHANGE 1: OK as is
 ========================= */
 
 error_reporting(E_ALL);
@@ -10,16 +11,30 @@ ini_set('display_errors', 1);
 
 /* =========================
    HEADERS
+   CHANGE 2: FIXED duplicate Access-Control-Allow-Headers
+   CHANGE 3: Added Organization-Guid properly
 ========================= */
 
 header("Content-Type: application/json; charset=UTF-8");
+
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 
+header("Access-Control-Allow-Headers: Content-Type, Authorization, Organization-Guid");
+
+
+/* =========================
+   HANDLE PREFLIGHT REQUEST
+   CHANGE 4: MUST exit immediately
+========================= */
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+
     http_response_code(200);
+
     exit;
+
 }
 
 
@@ -35,28 +50,34 @@ use Firebase\JWT\Key;
 
 
 /* =========================
-   DB CONNECTION
-========================= */
-
-
-
-/* =========================
    GET TOKEN FROM HEADER
+   CHANGE 5: safer version
 ========================= */
 
 function getBearerToken()
 {
+
     $headers = getallheaders();
 
-    if (!isset($headers['Authorization'])) {
-        return null;
-    }
+    foreach ($headers as $key => $value)
+    {
 
-    if (preg_match('/Bearer\s(\S+)/', $headers['Authorization'], $matches)) {
-        return $matches[1];
+        if (strtolower($key) === 'authorization')
+        {
+
+            if (preg_match('/Bearer\s(\S+)/', $value, $matches))
+            {
+
+                return $matches[1];
+
+            }
+
+        }
+
     }
 
     return null;
+
 }
 
 
@@ -66,31 +87,93 @@ function getBearerToken()
 
 $token = getBearerToken();
 
-if (!$token) {
+if (!$token)
+{
+
+    http_response_code(401);
 
     echo json_encode([
+
         "success" => false,
+
         "error" => "Token missing"
+
     ]);
 
     exit;
+
 }
 
-try {
 
-    $decoded = JWT::decode($token, new Key($jwt_secret, $jwt_algorithm));
-    $org_guid = $decoded->organization_guid ?? null;
+try
+{
 
-} catch (Exception $e) {
+    $decoded = JWT::decode(
+
+        $token,
+
+        new Key($jwt_secret, $jwt_algorithm)
+
+    );
+
+}
+catch (Exception $e)
+{
+
+    http_response_code(401);
 
     echo json_encode([
+
         "success" => false,
+
         "error" => "Invalid token",
+
         "message" => $e->getMessage()
+
     ]);
 
     exit;
+
 }
+
+
+
+/* =========================
+   GET ORGANIZATION HEADER
+   CHANGE 6: FIXED safe extraction
+========================= */
+
+function getOrganizationGuid()
+{
+
+    $headers = getallheaders();
+
+    foreach ($headers as $key => $value)
+    {
+
+        if (strtolower($key) === 'organization-guid')
+        {
+
+            return $value;
+
+        }
+
+    }
+
+    return null;
+
+}
+
+
+$org_guid = getOrganizationGuid();
+
+
+/* =========================
+   IMPORTANT CHANGE 7:
+   DO NOT EXIT IF ORG MISSING
+   allow Super Admin / fallback
+========================= */
+
 
 
 /* =========================
@@ -99,14 +182,13 @@ try {
 
 function getInput()
 {
+
     $data = file_get_contents("php://input");
 
-    if (!$data) {
-        return [];
-    }
+    return $data ? json_decode($data, true) : [];
 
-    return json_decode($data, true);
 }
+
 
 
 /* =========================
@@ -115,20 +197,26 @@ function getInput()
 
 function generateUUID()
 {
+
     $data = random_bytes(16);
 
     $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
+
     $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
 
     return vsprintf(
+
         '%s%s-%s-%s-%s-%s%s%s',
+
         str_split(bin2hex($data), 4)
+
     );
+
 }
 
 
-$method = $_SERVER['REQUEST_METHOD'];
 
+$method = $_SERVER['REQUEST_METHOD'];
 
 
 
@@ -136,221 +224,414 @@ $method = $_SERVER['REQUEST_METHOD'];
    GET LEADS
 ========================= */
 
-if ($method === "GET") {
+if ($method === "GET")
+{
 
-    if ($org_guid) {
+    /* CHANGE 8:
+       CONDITIONAL FILTER
+    */
+
+    if (!empty($org_guid))
+    {
+
         $sql = "
-            SELECT
-                l.id,
-                l.lead_guid,
-                l.client_name,
-                l.phone,
-                l.email,
-                l.company,
-                l.source,
-                l.status,
-                l.assigned_to,
-                l.remarks,
-                u.name AS assigned_name
-            FROM leads l
-            LEFT JOIN users u ON l.assigned_to = u.user_guid
-            WHERE l.is_active = 1 AND l.organization_guid = ?
-            ORDER BY l.id DESC
+
+        SELECT
+
+        l.id,
+
+        l.lead_guid,
+
+        l.client_name,
+
+        l.phone,
+
+        l.email,
+
+        l.company,
+
+        l.source,
+
+        l.status,
+
+        l.assigned_to,
+
+        l.remarks,
+
+        u.name AS assigned_name
+
+        FROM leads l
+
+        LEFT JOIN users u
+
+        ON l.assigned_to = u.user_guid
+
+        WHERE l.is_active = 1
+
+        AND l.organization_guid = ?
+
+        ORDER BY l.id DESC
+
         ";
+
+
         $stmt = $conn->prepare($sql);
+
         $stmt->bind_param("s", $org_guid);
-    } else {
-        // Super Admin sees all
+
+    }
+    else
+    {
+
+        /* Super Admin */
+
         $sql = "
-            SELECT
-                l.id,
-                l.lead_guid,
-                l.client_name,
-                l.phone,
-                l.email,
-                l.company,
-                l.source,
-                l.status,
-                l.assigned_to,
-                l.remarks,
-                u.name AS assigned_name
-            FROM leads l
-            LEFT JOIN users u ON l.assigned_to = u.user_guid
-            WHERE l.is_active = 1
-            ORDER BY l.id DESC
+
+        SELECT
+
+        l.id,
+
+        l.lead_guid,
+
+        l.client_name,
+
+        l.phone,
+
+        l.email,
+
+        l.company,
+
+        l.source,
+
+        l.status,
+
+        l.assigned_to,
+
+        l.remarks,
+
+        u.name AS assigned_name
+
+        FROM leads l
+
+        LEFT JOIN users u
+
+        ON l.assigned_to = u.user_guid
+
+        WHERE l.is_active = 1
+
+        ORDER BY l.id DESC
+
         ";
+
+
         $stmt = $conn->prepare($sql);
+
     }
 
+
+
     $stmt->execute();
+
     $result = $stmt->get_result();
+
 
     $data = [];
 
-    while ($row = $result->fetch_assoc()) {
+
+    while ($row = $result->fetch_assoc())
+    {
+
         $data[] = $row;
+
     }
 
+
     echo json_encode([
+
         "success" => true,
+
         "data" => $data
+
     ]);
 
     exit;
+
 }
+
+
 
 
 /* =========================
    ADD LEAD
 ========================= */
 
-if ($method === "POST") {
+if ($method === "POST")
+{
 
     $input = getInput();
 
     $guid = generateUUID();
 
+
     $stmt = $conn->prepare("
-        INSERT INTO leads
-        (
-            lead_guid,
-            client_name,
-            phone,
-            email,
-            company,
-            source,
-            status,
-            assigned_to,
-            remarks,
-            organization_guid,
-            created_at,
-            is_active
-        )
-        VALUES
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 1)
+
+    INSERT INTO leads
+
+    (
+
+    lead_guid,
+
+    client_name,
+
+    phone,
+
+    email,
+
+    company,
+
+    source,
+
+    status,
+
+    assigned_to,
+
+    remarks,
+
+    organization_guid,
+
+    created_at,
+
+    is_active
+
+    )
+
+    VALUES
+
+    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 1)
+
     ");
 
-    $assigned_to = !empty($input['assigned_to']) ? $input['assigned_to'] : null;
+
+    $assigned_to = $input['assigned_to'] ?? null;
+
 
     $stmt->bind_param(
-        "ssssssssss",
-        $guid,
-        $input['client_name'],
-        $input['phone'],
-        $input['email'],
-        $input['company'],
-        $input['source'],
-        $input['status'],
-        $assigned_to,
-        $input['remarks'],
-        $org_guid
+
+    "ssssssssss",
+
+    $guid,
+
+    $input['client_name'],
+
+    $input['phone'],
+
+    $input['email'],
+
+    $input['company'],
+
+    $input['source'],
+
+    $input['status'],
+
+    $assigned_to,
+
+    $input['remarks'],
+
+    $org_guid
+
     );
 
-    if ($stmt->execute()) {
+
+    if ($stmt->execute())
+    {
 
         echo json_encode([
+
             "success" => true,
+
             "message" => "Lead added successfully"
+
         ]);
 
-    } else {
+    }
+    else
+    {
 
         echo json_encode([
+
             "success" => false,
+
             "error" => $stmt->error
+
         ]);
+
     }
 
+
     exit;
+
 }
+
 
 
 /* =========================
    UPDATE LEAD
 ========================= */
 
-if ($method === "PUT") {
+if ($method === "PUT")
+{
 
     $input = getInput();
 
+
     $stmt = $conn->prepare("
-        UPDATE leads SET
-            client_name = ?,
-            phone = ?,
-            email = ?,
-            company = ?,
-            source = ?,
-            status = ?,
-            assigned_to = ?,
-            remarks = ?
-        WHERE id = ? AND organization_guid = ?
+
+    UPDATE leads SET
+
+    client_name = ?,
+
+    phone = ?,
+
+    email = ?,
+
+    company = ?,
+
+    source = ?,
+
+    status = ?,
+
+    assigned_to = ?,
+
+    remarks = ?
+
+    WHERE id = ?
+
+    AND organization_guid = ?
+
     ");
 
+
     $stmt->bind_param(
-        "ssssssssis",
-        $input['client_name'],
-        $input['phone'],
-        $input['email'],
-        $input['company'],
-        $input['source'],
-        $input['status'],
-        $input['assigned_to'],
-        $input['remarks'],
-        $input['id'],
-        $org_guid
+
+    "ssssssssis",
+
+    $input['client_name'],
+
+    $input['phone'],
+
+    $input['email'],
+
+    $input['company'],
+
+    $input['source'],
+
+    $input['status'],
+
+    $input['assigned_to'],
+
+    $input['remarks'],
+
+    $input['id'],
+
+    $org_guid
+
     );
 
-    if ($stmt->execute()) {
+
+    if ($stmt->execute())
+    {
 
         echo json_encode([
+
             "success" => true,
+
             "message" => "Lead updated"
+
         ]);
 
-    } else {
+    }
+    else
+    {
 
         echo json_encode([
+
             "success" => false,
+
             "error" => $stmt->error
+
         ]);
+
     }
 
+
     exit;
+
 }
+
 
 
 /* =========================
    DELETE LEAD
 ========================= */
 
-if ($method === "DELETE") {
+if ($method === "DELETE")
+{
 
     $input = getInput();
 
+
     $stmt = $conn->prepare("
-        UPDATE leads
-        SET is_active = 0
-        WHERE id = ? AND organization_guid = ?
+
+    UPDATE leads
+
+    SET is_active = 0
+
+    WHERE id = ?
+
+    AND organization_guid = ?
+
     ");
 
-    $stmt->bind_param("is", $input['id'], $org_guid);
 
-    if ($stmt->execute()) {
+    $stmt->bind_param(
+
+    "is",
+
+    $input['id'],
+
+    $org_guid
+
+    );
+
+
+    if ($stmt->execute())
+    {
 
         echo json_encode([
+
             "success" => true,
+
             "message" => "Lead deleted"
+
         ]);
 
-    } else {
+    }
+    else
+    {
 
         echo json_encode([
+
             "success" => false,
+
             "error" => $stmt->error
+
         ]);
+
     }
 
+
     exit;
+
 }
 
 

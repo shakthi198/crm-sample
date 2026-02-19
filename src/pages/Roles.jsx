@@ -41,6 +41,8 @@ const Roles = () => {
     let headers = { "Content-Type": "application/json" };
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
+      headers["Organization-Guid"] =
+        localStorage.getItem("organization_guid") || "";
     }
     return headers;
   };
@@ -56,9 +58,20 @@ const Roles = () => {
   const [roleToDelete, setRoleToDelete] = useState(null);
 
   // Initial Load
-  useEffect(() => {
+useEffect(() => {
+  loadRoles();
+
+  const handleOrgChange = () => {
     loadRoles();
-  }, []);
+  };
+
+  window.addEventListener("organizationChanged", handleOrgChange);
+
+  return () => {
+    window.removeEventListener("organizationChanged", handleOrgChange);
+  };
+}, []);
+
 
   const loadRoles = async () => {
     setLoading(true);

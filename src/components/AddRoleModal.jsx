@@ -17,13 +17,13 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 
 const AVAILABLE_PERMISSIONS = [
+    'Dashboard',
     'Organization',
     'Users',
     'Leads',
     'Followups',
     'Clients',
-    'Budgets',
-    'Settings'
+    'Budgets'
 ];
 
 const AddRoleModal = ({ open, onClose, onSave, roleToEdit }) => {

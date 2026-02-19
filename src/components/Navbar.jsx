@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   AppBar,
   Toolbar,
@@ -29,16 +29,34 @@ const Navbar = ({ handleDrawerToggle }) => {
   const navigate = useNavigate();
   const theme = useTheme();
   const { user, logout } = useAuth();
-  const ismobile = useMediaQuery(theme.breakpoints.down("sm")); // State for Logout Confirmation Modal
+  const ismobile = useMediaQuery(theme.breakpoints.down("sm"));
 
+  // State for Logout Confirmation Modal
   const [openLogoutDialog, setOpenLogoutDialog] = useState(false);
-  const [openProfileModal, setOpenProfileModal] = useState(false); // Organizations Dropdown State
+  const [openProfileModal, setOpenProfileModal] = useState(false);
 
+  // Organizations Dropdown State
   const [organizations, setOrganizations] = useState([]);
   const [selectedOrganization, setSelectedOrganization] = useState(
     localStorage.getItem("organization_guid") || "",
   );
+const [showNavbar, setShowNavbar] = useState(true);
 
+useEffect(() => {
+  const handleScroll = () => {
+    if (window.scrollY === 0) {
+      setShowNavbar(true);
+    } else {
+      setShowNavbar(false);
+    }
+  };
+
+  window.addEventListener("scroll", handleScroll);
+  return () => window.removeEventListener("scroll", handleScroll);
+}, []);
+
+
+  
   React.useEffect(() => {
     if (user?.role === "Admin") {
       const fetchOrganizations = async () => {
@@ -50,8 +68,9 @@ const Navbar = ({ handleDrawerToggle }) => {
           });
           const data = await response.json();
           if (data.success && Array.isArray(data.data)) {
-            setOrganizations(data.data); // Set default if not already selected
+            setOrganizations(data.data);
 
+            // Set default if not already selected
             if (!selectedOrganization && data.data.length > 0) {
               const defaultOrg = data.data[0].organization_guid;
               setSelectedOrganization(defaultOrg);
@@ -68,8 +87,12 @@ const Navbar = ({ handleDrawerToggle }) => {
 
   const handleOrganizationChange = (event) => {
     const orgGuid = event.target.value;
+
     setSelectedOrganization(orgGuid);
-    localStorage.setItem("organization_guid", orgGuid); // Optional: triggering a window event if other components need to react immediately
+
+    localStorage.setItem("organization_guid", orgGuid);
+
+    // ✅ This is enough
     window.dispatchEvent(new Event("organizationChanged"));
   };
 
@@ -92,20 +115,49 @@ const Navbar = ({ handleDrawerToggle }) => {
     <AppBar
       position="fixed"
       elevation={0}
-      sx={{
-        width: { xs: "100%", md: `calc(100% - ${drawerWidth}px)` },
-        ml: { md: `${drawerWidth}px` },
-        zIndex: (theme) => theme.zIndex.drawer + 1,
+      sx={(theme) => ({
+        top: 12,
+        left: 12,
+        right: 12,
 
-        backgroundColor: "#3D52A0", // Requested solid blue
-        color: "#FFFFFF", // Requested white text
-        borderBottom: "1px solid rgba(255, 255, 255, 0.1)", // Subtle white border
-        boxShadow: "none",
-      }}
+        width: "auto",
+        borderRadius: "18px",
+
+        backgroundColor: "#E6D8C9",
+        color: "#0F172A",
+
+        backdropFilter: "blur(6px)",
+
+        zIndex: {
+          xs: theme.zIndex.drawer - 1,
+          md: theme.zIndex.drawer + 10,
+        },
+
+        transform: showNavbar ? "translateY(0)" : "translateY(-120px)",
+        opacity: showNavbar ? 1 : 0,
+
+        transition: "all 0.35s ease",
+
+        [theme.breakpoints.up("md")]: {
+          left: `${drawerWidth + 24}px`,
+          right: 24,
+        },
+
+        [theme.breakpoints.down("sm")]: {
+          top: 8,
+          left: 8,
+          right: 8,
+          borderRadius: "12px",
+        },
+      })}
     >
-            
-      <Toolbar sx={{ height: 64, px: { xs: 2, md: 4 } }}>
-                
+      <Toolbar
+        sx={{
+          height: 64,
+          px: { xs: 2, md: 3 },
+          justifyContent: { xs: "space-between", md: "flex-end" },
+        }}
+      >
         <IconButton
           color="inherit"
           aria-label="open drawer"
@@ -113,14 +165,11 @@ const Navbar = ({ handleDrawerToggle }) => {
           onClick={handleDrawerToggle}
           sx={{ mr: 2, display: { md: "none" } }}
         >
-                    
           <MenuIcon />
-                  
         </IconButton>
-                {/* Brand / Logo Area - Mobile Only */}
-                
+
+        {/* Brand / Logo Area - Mobile Only */}
         <Box sx={{ display: { xs: "flex", md: "none" }, alignItems: "center" }}>
-                    
           <Box
             sx={{
               width: 32,
@@ -136,11 +185,11 @@ const Navbar = ({ handleDrawerToggle }) => {
               fontSize: "1.2rem",
               border: "1px solid rgba(255, 255, 255, 0.3)",
               boxShadow: "none",
+              display: { xs: "none", sm: "flex" },
             }}
           >
-                        C           
+            C
           </Box>
-                    
           <Typography
             variant="h6"
             noWrap
@@ -148,74 +197,67 @@ const Navbar = ({ handleDrawerToggle }) => {
             sx={{
               fontWeight: 700,
               letterSpacing: "-0.025em",
-              fontSize: "1rem",
+              fontSize: { xs: "1rem", sm: "1.2rem" },
             }}
           >
-                        CRM SYSTEM           
+            {ismobile ? "CRM" : "CRM SYSTEM"}
           </Typography>
-                  
         </Box>
-                
-        <Box sx={{ flexGrow: 1 }} />
-                {/* Organizations Dropdown - Admin Only */}
-                
+
+        <Box sx={{ flexGrow: 1, mr: { xs: 0.5, md: 1 } }} />
+
+        {/* Organizations Dropdown - Admin Only */}
         {user?.role === "Admin" && (
           <FormControl
             size="small"
             sx={{
               mr: 2,
-              minWidth: 200,
-              display: { xs: "none", md: "flex" }, // Hide on mobile if needed, or adjust
+              minWidth: { xs: 100, sm: 150, md: 200 },
+              display: "flex", // Hide on mobile if needed, or adjust
             }}
           >
-                        
             <Select
               value={selectedOrganization}
               onChange={handleOrganizationChange}
               displayEmpty
               variant="outlined"
               sx={{
-                color: "#FFFFFF",
+                color: "#0F172A",
+                height: ismobile ? 32 : 40,
+                borderRadius: "8px",
+                backgroundColor: "#ffffff41",
+
                 ".MuiOutlinedInput-notchedOutline": {
-                  borderColor: "rgba(255, 255, 255, 0.3)",
+                  borderColor: "#462b2b",
                 },
                 "&:hover .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "rgba(255, 255, 255, 0.5)",
+                  borderColor: "#462b2b",
                 },
                 "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "#FFFFFF",
+                  borderColor: "#462b2b",
                 },
                 ".MuiSvgIcon-root": {
-                  color: "#FFFFFF",
+                  color: "#0F172A",
                 },
-                height: 40,
-                borderRadius: "8px",
-                backgroundColor: "rgba(255, 255, 255, 0.1)",
               }}
               inputProps={{ "aria-label": "Select Organization" }}
             >
-                            
               <MenuItem value="" disabled>
-                                <em>Select Organization</em>
-                              
+                <em>Select Organization</em>
               </MenuItem>
-                            
               {organizations.map((org) => (
                 <MenuItem
                   key={org.organization_guid}
                   value={org.organization_guid}
                 >
-                                    {org.company_name}
-                                  
+                  {org.company_name}
                 </MenuItem>
               ))}
-                          
             </Select>
-                      
           </FormControl>
         )}
-                {/* User Info Section - CLICKABLE */}
-                
+
+        {/* User Info Section - CLICKABLE */}
         <Box
           onClick={() => setOpenProfileModal(true)}
           sx={{
@@ -233,80 +275,62 @@ const Navbar = ({ handleDrawerToggle }) => {
             },
           }}
         >
-                    
           <Box
             sx={{ display: { xs: "none", sm: "block" }, textAlign: "right" }}
           >
-                        
             <Typography
               variant="subtitle2"
-              sx={{ fontWeight: 600, color: "#FFFFFF", lineHeight: 1.2 }}
+              sx={{ fontWeight: 600, color: "#462b2b", lineHeight: 1.2 }}
             >
-                            {user ? user.name : "User"}
-                          
+              {user ? user.name : "User"}
             </Typography>
-                        
             <Typography
               variant="caption"
               sx={{
-                color: "rgba(255, 255, 255, 0.7)",
+                color: "#462b2b",
                 display: "block",
                 lineHeight: 1.2,
               }}
             >
-                            {user ? user.role : "Role"}
-                          
+              {user ? user.role : "Role"}
             </Typography>
-                      
           </Box>
-                    
+
           <Avatar
             sx={{
-              bgcolor: "rgba(255, 255, 255, 0.2)", // Translucent white background
-              color: "#FFFFFF",
-              border: "2px solid #FFFFFF",
-              fontWeight: "bold",
+              bgcolor: "#462b2b",
+              color: "#ffffff",
               width: ismobile ? 32 : 40,
               height: ismobile ? 32 : 40,
               fontSize: "1rem",
             }}
           >
-                        {user?.name?.charAt(0) || "U"}
-                      
+            {user?.name?.charAt(0) || "U"}
           </Avatar>
-                  
         </Box>
-                
-        <Box sx={{ ml: 1 }}>
-                    
+
+        <Box sx={{ ml: { xs: -0.5, sm: 1 } }}>
           <IconButton
             onClick={handleLogoutClick}
             sx={{
-              color: "#FFFFFF",
-              bgcolor: "transparent",
-              "&:hover": { bgcolor: "#2F4287" }, // Darker blue on hover
+              color: "#462b2b",
+              "&:hover": { bgcolor: "#f1e7dc" },
               borderRadius: "8px",
-              padding: "8px",
-              border: "1px solid rgba(255, 255, 255, 0.3)",
             }}
           >
-                        
             <LogoutIcon fontSize="small" />
-                      
           </IconButton>
-                  
         </Box>
-              
       </Toolbar>
-            {/* User Profile Modal */}
-            
+
+      {/* User Profile Modal */}
       <UserProfileModal
         open={openProfileModal}
         onClose={() => setOpenProfileModal(false)}
         user={user}
       />
-            {/* Logout Confirmation Modal */}
-            
+
+      {/* Logout Confirmation Modal */}
       <Dialog
         open={openLogoutDialog}
         onClose={handleLogoutCancel}
@@ -321,7 +345,6 @@ const Navbar = ({ handleDrawerToggle }) => {
           },
         }}
       >
-                
         <Box
           sx={{
             p: 3,
@@ -332,7 +355,6 @@ const Navbar = ({ handleDrawerToggle }) => {
             textAlign: "center",
           }}
         >
-                    
           <Box
             sx={{
               bgcolor: alpha(theme.palette.primary.main, 0.1),
@@ -345,25 +367,20 @@ const Navbar = ({ handleDrawerToggle }) => {
               justifyContent: "center",
             }}
           >
-                        
             <LogoutIcon sx={{ fontSize: 28 }} />
-                      
           </Box>
-                    
           <Typography
             variant="h6"
             fontWeight={700}
             sx={{ mb: 1, color: "#101828" }}
           >
-                        Logout Confirmation           
+            Logout Confirmation
           </Typography>
-                    
           <Typography variant="body2" color="text.secondary">
-                        Are you sure you want to logout?           
+            Are you sure you want to logout?
           </Typography>
-                  
         </Box>
-                
+
         <Box
           sx={{
             p: 3,
@@ -373,7 +390,6 @@ const Navbar = ({ handleDrawerToggle }) => {
             justifyContent: "center",
           }}
         >
-                    
           <Button
             onClick={handleLogoutCancel}
             variant="outlined"
@@ -387,9 +403,8 @@ const Navbar = ({ handleDrawerToggle }) => {
               "&:hover": { borderColor: "#D0D5DD", bgcolor: "#F9FAFB" },
             }}
           >
-                        Cancel           
+            Cancel
           </Button>
-                    
           <Button
             onClick={handleLogoutConfirm}
             variant="contained"
@@ -403,13 +418,10 @@ const Navbar = ({ handleDrawerToggle }) => {
               "&:hover": { bgcolor: "#2A3B75" },
             }}
           >
-                        Logout           
+            Logout
           </Button>
-                  
         </Box>
-              
       </Dialog>
-          
     </AppBar>
   );
 };

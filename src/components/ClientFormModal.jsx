@@ -126,6 +126,7 @@ const ClientFormModal = ({
           borderColor: theme.palette.primary.main,
           boxShadow: "0 4px 12px rgba(61, 82, 160, 0.08)",
         },
+        overflow: "hidden",
         ...sx,
       }}
     >
@@ -174,7 +175,7 @@ const ClientFormModal = ({
         sx: {
           borderRadius: "16px",
           width: "100%",
-          maxWidth: "840px",
+          maxWidth: "820px",
           boxShadow: "0 24px 48px rgba(0,0,0,0.2)",
           overflow: "hidden",
         },
@@ -342,12 +343,30 @@ const ClientFormModal = ({
               {formData.contract_file ? (
                 <>
                   <FileIcon color="primary" sx={{ fontSize: 40, mb: 1 }} />
-                  <Typography variant="subtitle1" fontWeight={600}>
-                    {getFileName()}
-                  </Typography>
-                  <Typography variant="body2" color="primary">
-                    Click to replace file
-                  </Typography>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 0.5,
+                    }}
+                  >
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight={600}
+                      sx={{
+                        maxWidth: { xs: "60px", sm: "180px" }, // adjust width as needed
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {getFileName()}
+                    </Typography>
+
+                    <Typography variant="body2" color="primary">
+                      Click to replace file
+                    </Typography>
+                  </Box>
                 </>
               ) : (
                 <>
@@ -355,12 +374,20 @@ const ClientFormModal = ({
                     color="action"
                     sx={{ fontSize: 40, mb: 1 }}
                   />
-                  <Typography variant="body1" fontWeight={600} sx={{ mt: 1 }}>
-                    Click to upload Contract
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    PDF, PNG, or JPG (Max 5MB)
-                  </Typography>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: { xs: "column", sm: "row" },
+                      gap: 0.5,
+                    }}
+                  >
+                    <Typography variant="body1" fontWeight={600} sx={{ mt: 1 }}>
+                      Click to upload Contract
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      PDF, PNG, or JPG (Max 5MB)
+                    </Typography>
+                  </Box>
                 </>
               )}
             </Box>

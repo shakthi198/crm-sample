@@ -21,8 +21,7 @@ const SummaryCards = ({ items, showChart = false }) => {
           item
           xs={12}
           sm={6}
-          md={3}
-          width={ismobile ? "100%" : isTablet ? "45%" : "23.5%"}
+          width={{ xs: "100%", sm: "48%",lg:"23%" }}
         >
           <Card
             elevation={0}

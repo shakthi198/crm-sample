@@ -30,21 +30,18 @@ const BudgetPage = () => {
     rejectedCount: 0,
   });
   // :wrench: Get token from localStorage with fallback
-  const token =
-    localStorage.getItem("token");
+  const token = localStorage.getItem("token");
   const fetchBudgets = async () => {
     try {
       setLoading(true);
-      const res = await fetch(
-        `${apiEndpoints.budget}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+      const res = await fetch(`${apiEndpoints.budget}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "Organization-Guid": localStorage.getItem("organization_guid") || "",
         },
-      );
+      });
       if (!res.ok) {
         console.warn("Budget fetch failed:", res.status);
         setBudgets([]);
@@ -66,6 +63,16 @@ const BudgetPage = () => {
   };
   useEffect(() => {
     fetchBudgets();
+
+     const handleOrgChange = () => {
+       fetchBudgets();
+     };
+
+     window.addEventListener("organizationChanged", handleOrgChange);
+
+     return () => {
+       window.removeEventListener("organizationChanged", handleOrgChange);
+     };
   }, []);
   // ===============================
   // :small_blue_diamond: SUMMARY CALCULATION
@@ -100,17 +107,15 @@ const BudgetPage = () => {
   const handleSaveBudget = async (budgetData) => {
     const method = budgetData.budget_guid ? "PUT" : "POST";
     try {
-      const res = await fetch(
-        `${apiEndpoints.budget}`,
-        {
-          method,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(budgetData),
+      const res = await fetch(`${apiEndpoints.budget}`, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "Organization-Guid": localStorage.getItem("organization_guid") || "",
         },
-      );
+        body: JSON.stringify(budgetData),
+      });
       const contentType = res.headers.get("content-type") || "";
       const payloadText = contentType.includes("application/json")
         ? null
@@ -150,17 +155,15 @@ const BudgetPage = () => {
       status: newStatus,
     };
     try {
-      const res = await fetch(
-        `${apiEndpoints.budget}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
+      const res = await fetch(`${apiEndpoints.budget}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "Organization-Guid": localStorage.getItem("organization_guid") || "",
         },
-      );
+        body: JSON.stringify(payload),
+      });
       const contentType = res.headers.get("content-type") || "";
       const payloadText = contentType.includes("application/json")
         ? null

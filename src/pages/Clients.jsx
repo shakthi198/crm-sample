@@ -70,10 +70,12 @@ const Clients = () => {
   const fetchClients = async () => {
     try {
       const token = localStorage.getItem("token");
+      const orgGuid = localStorage.getItem("organization_guid");
 
       const res = await fetch(`${apiEndpoints.clients}`, {
         headers: {
           Authorization: `Bearer ${token}`,
+          "Organization-Guid": orgGuid,
         },
       });
 
@@ -90,7 +92,16 @@ const Clients = () => {
   };
   const fetchLeads = async () => {
     try {
-      const res = await fetch(`${apiEndpoints.dropdown}?table=leads`);
+      const token = localStorage.getItem("token");
+      const orgGuid = localStorage.getItem("organization_guid");
+      const res = await fetch(`${apiEndpoints.dropdown}?table=leads`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "Organization-Guid": orgGuid,
+        },
+      });
       const data = await res.json();
 
       if (data.success) {
@@ -101,10 +112,22 @@ const Clients = () => {
     }
   };
 
-  useEffect(() => {
+useEffect(() => {
+  fetchClients();
+  fetchLeads();
+
+  const handleOrgChange = () => {
     fetchClients();
     fetchLeads();
-  }, []);
+  };
+
+  window.addEventListener("organizationChanged", handleOrgChange);
+
+  return () => {
+    window.removeEventListener("organizationChanged", handleOrgChange);
+  };
+}, []);
+
 
   const handleToastClose = () => {
     setToast({ ...toast, open: false });
@@ -158,6 +181,7 @@ const Clients = () => {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
+          "Organization-Guid": localStorage.getItem("organization_guid"),
         },
         body: form,
       });
@@ -185,6 +209,7 @@ const Clients = () => {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
+        "Organization-Guid": localStorage.getItem("organization_guid"),
       },
       body: JSON.stringify({ client_guid }),
     });

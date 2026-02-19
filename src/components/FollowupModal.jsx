@@ -145,7 +145,7 @@ const FollowupModal = ({ open, onClose, onSave, followup, leads = [], users = []
                 </IconButton>
             </DialogTitle>
 
-            <DialogContent dividers sx={{ p: 4, bgcolor: '#f8f9fc' }}>
+            <DialogContent dividers sx={{ p: {xs:2,sm:4}, bgcolor: '#f8f9fc' }}>
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
 
                     {/* Row 1 */}

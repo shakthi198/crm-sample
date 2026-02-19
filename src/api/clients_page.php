@@ -4,9 +4,18 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, Organization-Guid");
 header("Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS");
 header("Content-Type: application/json");
+
+// ===============================
+// HANDLE OPTIONS (CORS PREFLIGHT)
+// ===============================
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
 
 require_once 'config.php';
 require_once 'middleware.php'; // uses $validation
@@ -20,7 +29,36 @@ if (!isset($validation) || !$validation['success']) {
 
 $decoded = $validation['data'];
 
-$organization_guid = $decoded->organization_guid ?? null;
+function getOrganizationGuid()
+{
+
+    $headers = getallheaders();
+
+    foreach ($headers as $key => $value) {
+
+        if (strtolower($key) === 'organization-guid') {
+
+            return $value;
+
+        }
+
+    }
+
+    return null;
+
+}
+
+
+$organization_guid = getOrganizationGuid();
+
+if (!$organization_guid) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Organization-Guid header missing"
+    ]);
+    exit();
+}
+
 $admin_guid = $decoded->admin_guid ?? null;
 
 if (!$organization_guid) {
