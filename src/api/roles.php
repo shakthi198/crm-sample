@@ -30,7 +30,7 @@ if (!isset($validation) || !$validation['success']) {
 
 $auth = (array)$validation['data'];
 $user_role = $auth['role'] ?? '';
-
+$is_super_admin = strcasecmp($user_role, 'Super Admin') === 0;
 /* ===============================
    GET ORG FROM HEADER
 =============================== */
@@ -46,12 +46,11 @@ function getOrganizationGuid() {
 
 $org_guid = getOrganizationGuid();
 
-if(!$org_guid){
+if(!$is_super_admin && !$org_guid){
     http_response_code(400);
     echo json_encode(["success"=>false,"error"=>"Organization-Guid header missing"]);
     exit;
 }
-
 $method = $_SERVER['REQUEST_METHOD'];
 
 switch($method){
@@ -78,12 +77,20 @@ switch($method){
 ========================================================= */
 function handleGet($conn,$org_guid)
 {
+    if ($org_guid) {
     $stmt = $conn->prepare("
         SELECT role_guid, role_name, is_active, description, is_system
         FROM roles
         WHERE organization_guid = ? OR is_system = 1
     ");
     $stmt->bind_param("s",$org_guid);
+} else {
+    // Super Admin → get all roles
+    $stmt = $conn->prepare("
+        SELECT role_guid, role_name, is_active, description, is_system
+        FROM roles
+    ");
+}
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -92,8 +99,9 @@ function handleGet($conn,$org_guid)
     while($row = $result->fetch_assoc()){
 
         $role_guid = $row['role_guid'];
+if ($org_guid) {
 
-        $permStmt = $conn->prepare("
+$permStmt = $conn->prepare("
             SELECT p.module, p.view, p.edit, p.`delete`, p.full_access
             FROM role_permissions rp
             JOIN permissions p ON rp.permission_guid = p.permission_guid
@@ -101,8 +109,17 @@ function handleGet($conn,$org_guid)
             AND rp.organization_guid = ?
             AND rp.is_active = 1
         ");
-
-        $permStmt->bind_param("ss",$role_guid,$org_guid);
+         $permStmt->bind_param("ss",$role_guid,$org_guid);}
+         else{
+        $permStmt = $conn->prepare("
+            SELECT p.module, p.view, p.edit, p.`delete`, p.full_access
+            FROM role_permissions rp
+            JOIN permissions p ON rp.permission_guid = p.permission_guid
+            WHERE rp.role_guid = ?
+            AND rp.is_active = 1
+        ");
+        $permStmt->bind_param("s",$role_guid);
+         }
         $permStmt->execute();
         $permResult = $permStmt->get_result();
 

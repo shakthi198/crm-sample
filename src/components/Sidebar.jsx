@@ -23,6 +23,24 @@ import ExpandMore from "@mui/icons-material/ExpandMore";
 import { useAuth } from "../context/AuthContext";
 import { Link, useLocation } from "react-router-dom";
 
+const superAdminMenu = [
+  {
+    text: "Super Dashboard",
+    icon: <DashboardIcon />,
+    path: "/super/dashboard",
+  },
+  {
+    text: "Reports",
+    icon: <AssignmentIcon />,
+    path: "/super/reports",
+  },
+  {
+    text: "Admin Management",
+    icon: <AdminPanelSettingsIcon />,
+    path: "/super/users",
+  },
+];
+
 const menuItems = [
   {
     text: "Dashboard",
@@ -68,6 +86,12 @@ const menuItems = [
     module: "Payroll",
   },
   {
+    text: "Reports",
+    icon: <AssignmentIcon />,
+    path: "/reports",
+    module: "Reports",
+  },
+  {
     text: "Roles & Permissions",
     icon: <AdminPanelSettingsIcon />,
     module: "Roles", // parent module
@@ -83,13 +107,15 @@ const Sidebar = ({ drawerWidth, isOpen, handleDrawerToggle }) => {
   const location = useLocation();
   const [rolesOpen, setRolesOpen] = useState(true);
 const { user } = useAuth();
+const isSuperAdmin = user?.role === "Super Admin";
 const hasAccess = (moduleName) => {
   if (!user) return false;
 
-  // Admin & Super Admin → full access
-  if (user.role === "Admin" || user.role === "Super Admin") {
-    return true;
-  }
+  // Super Admin always has access
+  if (user.role === "Super Admin") return true;
+
+  // Admin has full access
+  if (user.role === "Admin") return true;
 
   if (!user.permissions) return false;
 
@@ -144,7 +170,7 @@ const hasAccess = (moduleName) => {
       </Box>
 
       <List>
-        {menuItems.map((item) => {
+        {(isSuperAdmin ? superAdminMenu : menuItems).map((item) => {
           // If parent has children
           if (item.children) {
             const visibleChildren = item.children.filter((child) =>
@@ -224,7 +250,7 @@ const hasAccess = (moduleName) => {
           const isActive = location.pathname.startsWith(item.path);
 
           return (
-            <ListItem key={item.text} disablePadding sx={{ mb: 0}}>
+            <ListItem key={item.text} disablePadding sx={{ mb: 0 }}>
               <ListItemButton
                 component={Link}
                 to={item.path}

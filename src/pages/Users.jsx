@@ -56,6 +56,16 @@ const Users = () => {
   useEffect(() => {
     loadUsers();
     loadRoles();
+      const handleOrgChange = () => {
+        loadUsers();
+        loadRoles();
+      };
+
+      window.addEventListener("organizationChanged", handleOrgChange);
+
+      return () => {
+        window.removeEventListener("organizationChanged", handleOrgChange);
+      };
   }, []);
 
   const loadRoles = async () => {

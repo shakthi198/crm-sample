@@ -111,7 +111,7 @@ if ($user) {
     if (password_verify($password, $user['password'])) {
         $is_valid = true;
     } elseif ($password === $user['password']) {
-        // Plain text match! (User requested this)
+        // legacy plain text support (optional)
         $is_valid = true;
         $needs_rehash = true;
     }
@@ -123,18 +123,30 @@ if (!$is_valid) {
     exit;
 }
 
-// Upgrade to hash if needed
-if ($needs_rehash) {
+// Upgrade to hash if needed (ONLY for normal users)
+if ($needs_rehash && !$is_super_admin) {
     $new_hash = password_hash($password, PASSWORD_DEFAULT);
-    if ($is_super_admin) {
-        $upd = $conn->prepare("UPDATE super_admin SET password = ? WHERE super_admin_guid = ?");
-    } else {
-        $upd = $conn->prepare("UPDATE users SET password = ? WHERE user_guid = ?");
-    }
+    $upd = $conn->prepare("UPDATE users SET password = ? WHERE user_guid = ?");
     $upd->bind_param("ss", $new_hash, $user['user_guid']);
     $upd->execute();
     $upd->close();
 }
+
+// Update last_login
+if ($is_super_admin) {
+    $upd = $conn->prepare("UPDATE super_admin SET last_login = NOW() WHERE super_admin_guid = ?");
+} else {
+    $upd = $conn->prepare("UPDATE users SET last_login = NOW() WHERE user_guid = ?");
+}
+$upd->bind_param("s", $user['user_guid']);
+$upd->execute();
+$upd->close();
+
+// Log activity
+$act_stmt = $conn->prepare("INSERT INTO activity_log (user_guid, action, module) VALUES (?, 'Logged In', 'Authentication')");
+$act_stmt->bind_param("s", $user['user_guid']);
+$act_stmt->execute();
+$act_stmt->close();
 
 if ($user['is_active'] == 0) {
     http_response_code(403);

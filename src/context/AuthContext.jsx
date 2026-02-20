@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }) => {
           localStorage.setItem("organization_guid", data.organization_guid);
         }
 
-        return true;
+        return newUser;
       } else {
         throw new Error(data.error || "Login failed");
       }
