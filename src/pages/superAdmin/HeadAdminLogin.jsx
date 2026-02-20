@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
     Box,
@@ -19,11 +19,11 @@ import {
     VisibilityOff,
     Layers as LogoIcon
 } from '@mui/icons-material'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../../context/AuthContext'
+import usersData from '../../data/users.json'
+import LoadingSpinner from '../../components/LoadingSpinner'
 
-import LoadingSpinner from '../components/LoadingSpinner'
-
-const Login = () => {
+const HeadAdminLogin = () => {
     const { login } = useAuth()
     const theme = useTheme()
     const navigate = useNavigate()
@@ -70,19 +70,19 @@ const Login = () => {
         setErrorMsg('')
 
         try {
-            // Real API Login
-            const loggedInUser = await login(username, password);
+            await login(username, password, 'HEADADMIN')
 
-            if (loggedInUser.role === "Super Admin") {
-              navigate("/super/dashboard");
+            // Check if the user role is correct (Backend returns 'Super Admin')
+            const savedUser = JSON.parse(localStorage.getItem('crm_user'));
+            if (savedUser && (savedUser.role === 'Super Admin' || savedUser.role === 'Head Admin')) {
+                navigate('/super/dashboard')
             } else {
-              navigate("/dashboard");
+                setErrorMsg('Access Restricted: Super Admin only.')
+                setIsLoading(false)
             }
         } catch (error) {
             console.error("Login failed:", error)
-            // Error message from API or generic
-            const msg = error.response?.data?.error || error.message || 'Authentication failed. Please check credentials.'
-            setErrorMsg(msg)
+            setErrorMsg(error.message || 'Authentication failed.')
             setIsLoading(false)
         }
     }
@@ -124,7 +124,7 @@ const Login = () => {
                             display: 'flex',
                             flexDirection: 'column',
                             minHeight: { xs: 300, md: 'auto' },
-                            background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
+                            background: `linear-gradient(135deg, ${theme.palette.secondary.dark} 0%, ${theme.palette.secondary.main} 100%)`,
                             overflow: 'hidden'
                         }}
                     >
@@ -184,7 +184,7 @@ const Login = () => {
                                         color: '#fff'
                                     }}
                                 >
-                                    Client Success<br />Through Precision
+                                    Head Admin<br />Portal
                                 </Typography>
                                 <Typography
                                     variant="body1"
@@ -196,7 +196,7 @@ const Login = () => {
                                         color: '#fff'
                                     }}
                                 >
-                                    Efficiently manage your leads and follow-ups with our specialized CRM solution.
+                                    Secure access for global system administration.
                                 </Typography>
                             </Box>
                         </Box>
@@ -216,10 +216,10 @@ const Login = () => {
                         <Box sx={{ width: '100%', maxWidth: 380 }}>
                             <Box sx={{ mb: 6 }}>
                                 <Typography variant="h4" sx={{ fontWeight: 800, color: 'text.primary', mb: 1, letterSpacing: '-0.03em' }}>
-                                    Welcome Back
+                                    Restricted Access
                                 </Typography>
                                 <Typography sx={{ color: 'text.secondary', fontWeight: 500 }}>
-                                    Sign in to access your dashboard.
+                                    Head Admin login required.
                                 </Typography>
                             </Box>
 
@@ -301,26 +301,6 @@ const Login = () => {
                                     />
                                 </Box>
 
-                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 4 }}>
-                                    <FormControlLabel
-                                        control={
-                                            <Checkbox
-                                                checked={keepSignedIn}
-                                                onChange={(e) => setKeepSignedIn(e.target.checked)}
-                                                color="primary"
-                                                size="small"
-                                                sx={{ borderRadius: '4px' }}
-                                            />
-                                        }
-                                        label={
-                                            <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.secondary' }}>
-                                                Remember device
-                                            </Typography>
-                                        }
-                                    />
-                                    {/* Forgot Password Link - Optional */}
-                                </Box>
-
                                 <Button
                                     fullWidth
                                     type="submit"
@@ -339,7 +319,7 @@ const Login = () => {
                                         },
                                     }}
                                 >
-                                    {isLoading ? 'Signing in...' : 'Sign In to Dashboard'}
+                                    {isLoading ? 'Verifying...' : 'Authenticate'}
                                 </Button>
                             </Box>
                         </Box>
@@ -350,4 +330,4 @@ const Login = () => {
     )
 }
 
-export default Login
+export default HeadAdminLogin

@@ -20,6 +20,7 @@ const apiEndpoints = {
   getSalaryStatus: `${API_BASE_URL}/get-salary-status.php`,
   addAdvanceEntry: `${API_BASE_URL}/add-advance-entry.php`,
   getAdvanceHistory: `${API_BASE_URL}/get-advance-history.php`,
+  reports: `${API_BASE_URL}/reports.php`,
 };
 
 export default apiEndpoints;

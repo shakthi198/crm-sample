@@ -253,111 +253,84 @@ break;
    GET USERS
 ============================================ */
 
-function handleGet($conn,$decoded,$organization_guid)
+function handleGet($conn, $decoded, $organization_guid)
 {
+    $is_super_admin = strcasecmp($decoded->role, "Super Admin") === 0;
 
+    /* ==========================================
+       SUPER ADMIN → Show ONLY Admin Users
+    ========================================== */
+    if ($is_super_admin)
+    {
+        $stmt = $conn->prepare("
+            SELECT
+                u.user_guid,
+                u.organization_guid,
+                u.name,
+                u.email,
+                u.role_guid,
+                r.role_name,
+                u.status,
+                u.is_active
+            FROM users u
+            LEFT JOIN roles r ON u.role_guid = r.role_guid
+            WHERE LOWER(r.role_name) = 'admin'
+        ");
 
-/* FIX 5: ORGANIZATION FILTER SAFE */
+        $stmt->execute();
+        $result = $stmt->get_result();
+    }
+    else
+    {
+        /* ==========================================
+           NORMAL ADMIN → Only Their Organization
+        ========================================== */
 
-if(!empty($organization_guid))
-{
+        // SAFER: use org from JWT instead of header
+        $org_from_token = $decoded->organization_guid ?? null;
 
-$stmt=$conn->prepare("
+        if (!$org_from_token)
+        {
+            http_response_code(400);
+            echo json_encode([
+                "success" => false,
+                "error" => "Organization missing in token"
+            ]);
+            return;
+        }
 
-SELECT
+        $stmt = $conn->prepare("
+            SELECT
+                u.user_guid,
+                u.organization_guid,
+                u.name,
+                u.email,
+                u.role_guid,
+                r.role_name,
+                u.status,
+                u.is_active
+            FROM users u
+            LEFT JOIN roles r ON u.role_guid = r.role_guid
+            WHERE u.organization_guid = ?
+        ");
 
-u.user_guid,
+        $stmt->bind_param("s", $organization_guid);
+        $stmt->execute();
+        $result = $stmt->get_result();
+    }
 
-u.organization_guid,
+    $data = [];
 
-u.name,
+    while ($row = $result->fetch_assoc())
+    {
+        $data[] = $row;
+    }
 
-u.email,
-
-u.role_guid,
-
-r.role_name,
-
-u.status,
-
-u.is_active
-
-FROM users u
-
-LEFT JOIN roles r
-
-ON u.role_guid=r.role_guid
-
-WHERE u.organization_guid=?
-
-");
-
-
-$stmt->bind_param("s",$organization_guid);
-
-$stmt->execute();
-
-$result=$stmt->get_result();
-
+    echo json_encode([
+        "success" => true,
+        "data" => $data
+    ]);
 }
-else
-{
-
-$result=$conn->query("
-
-SELECT
-
-u.user_guid,
-
-u.organization_guid,
-
-u.name,
-
-u.email,
-
-u.role_guid,
-
-r.role_name,
-
-u.status,
-
-u.is_active
-
-FROM users u
-
-LEFT JOIN roles r
-
-ON u.role_guid=r.role_guid
-
-");
-
-}
-
-
-
-$data=[];
-
-
-while($row=$result->fetch_assoc())
-{
-
-$data[]=$row;
-
-}
-
-
-
-echo json_encode([
-
-"success"=>true,
-
-"data"=>$data
-
-]);
-
-
-}
-
 
 
 

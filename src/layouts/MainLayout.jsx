@@ -17,7 +17,7 @@ const MainLayout = () => {
     <Box
       sx={{
         display: "flex",
-        minHeight: "100dvh",
+        minHeight: "100vh",
         background: "#E6D8C9",
         overflowX: "hidden",
       }}
@@ -37,7 +37,7 @@ const MainLayout = () => {
         component="main"
         sx={{
           flexGrow: 1,
-          minHeight: "100dvh",
+          minHeight: "100vh",
           boxSizing: "border-box",
           display: "flex",
           flexDirection: "column",

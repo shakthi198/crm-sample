@@ -83,7 +83,7 @@ const UserProfileModal = ({ open, onClose, user }) => {
 
     // Derived/Mock data for read-only fields
     const userDetails = {
-        role: user.role || 'Super Admin',
+        role: user.role || 'user',
         organization: user.organization || 'CRM System',
         username: (user.name || 'user').toLowerCase().replace(/\s/g, ''),
         createdDate: 'Jan 15, 2024',

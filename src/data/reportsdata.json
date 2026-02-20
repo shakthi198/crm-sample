@@ -1,0 +1,42 @@
+{
+  "availableYears": ["2025", "2026"],
+  "availableMonths": ["January", "February", "March"],
+  "reports": [
+    {
+      "year": "2026",
+      "month": "January",
+      "summary": {
+        "totalRevenue": "₹2,50,000",
+        "totalAdmins": 5,
+        "pendingCollections": "₹75,000",
+        "activeProjects": 18
+      },
+      "revenueTrend": [
+        { "name": "Week 1", "value": 1500 },
+        { "name": "Week 2", "value": 2800 },
+        { "name": "Week 3", "value": 2100 },
+        { "name": "Week 4", "value": 3200 }
+      ],
+      "revenueDistribution": [
+        { "name": "Approved", "value": 600 },
+        { "name": "Pending", "value": 250 },
+        { "name": "Rejected", "value": 150 }
+      ],
+      "clientGrowth": [
+        { "name": "W1", "clients": 2 },
+        { "name": "W2", "clients": 5 },
+        { "name": "W3", "clients": 4 },
+        { "name": "W4", "clients": 8 }
+      ],
+      "projectStatus": [
+        { "status": "Started", "count": 10 },
+        { "status": "In Progress", "count": 15 },
+        { "status": "Delayed", "count": 3 },
+        { "status": "Completed", "count": 12 }
+      ],
+      "performance": [
+        { "name": "Main Admin", "clients": 12, "revenue": 120000, "target": "92%" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+[
+    {
+        "id": 1,
+        "adminName": "Sarah Jenkins",
+        "action": "Created Client",
+        "time": "10 mins ago"
+    },
+    {
+        "id": 2,
+        "adminName": "Michael Chen",
+        "action": "Deleted Admin",
+        "time": "30 mins ago"
+    },
+    {
+        "id": 3,
+        "adminName": "Emily Johnson",
+        "action": "Login",
+        "time": "1 hr ago"
+    },
+    {
+        "id": 4,
+        "adminName": "David Rodriguez",
+        "action": "Updated Role",
+        "time": "2 hrs ago"
+    },
+    {
+        "id": 5,
+        "adminName": "Jennifer Wu",
+        "action": "Exported Reports",
+        "time": "3 hrs ago"
+    }
+]
