@@ -28,6 +28,7 @@ import ClientFormModal from "../components/ClientFormModal";
 import ClientDetailsModal from "../components/ClientDetailsModal";
 import LoadingSpinner from "../components/LoadingSpinner";
 import PageContainer from "../components/PageContainer";
+import DataTableCard from "../components/DataTableCard";
 import apiEndpoints from "../apiconfig";
 
 // --- CURRENT USER SIMULATION (CHANGE THIS TO TEST DIFFERENT ROLES) ---
@@ -279,7 +280,8 @@ useEffect(() => {
           )
         }
       >
-        <TableContainer component={Paper} sx={{ overflowX: "auto" }}>
+        <DataTableCard>
+        <TableContainer sx={{ overflowX: "auto" }}>
           <Table sx={{ minWidth: { xs: 800, md: "auto" } }}>
             <TableHead>
               <TableRow sx={{ bgcolor: "grey.100" }}>
@@ -330,7 +332,7 @@ useEffect(() => {
                       />
                     </TableCell>
                     <TableCell>
-                      <Box sx={{ display: "flex" }}>
+                      <Box sx={{ display: "flex", justifyContent: "center" }}>
                         <IconButton
                           size="small"
                           color="info"
@@ -383,6 +385,7 @@ useEffect(() => {
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
+        </DataTableCard>
 
         {/* Client Form Modal */}
         <ClientFormModal

@@ -27,6 +27,8 @@ import {
 
 import LeadForm from "../components/LeadForm";
 import LoadingSpinner from "../components/LoadingSpinner";
+import PageContainer from "../components/PageContainer";
+import DataTableCard from "../components/DataTableCard";
 import apiEndpoints from "../apiconfig";
 
 const API_URL = apiEndpoints.leads;
@@ -282,7 +284,19 @@ const { showSnackbar } = useSnackbar();
       ========================= */
 
   return (
-    <Box sx={{ p: 3 }}>
+    <PageContainer
+      title="Leads Management"
+      subtitle="Track and manage your client leads and sales pipeline."
+      action={
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => handleOpenDialog("add")}
+        >
+          Add Lead
+        </Button>
+      }
+    >
       {loading && <LoadingSpinner loading={true} />}
 
       {error && (
@@ -291,85 +305,74 @@ const { showSnackbar } = useSnackbar();
         </Alert>
       )}
 
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
-        <Typography variant={"h4"}>
-          {ismobile ? "Leads" : "Leads Management"}
-        </Typography>
+      <DataTableCard>
+        <TableContainer sx={{ overflowX: "auto" }}>
+          <Table sx={{ minWidth: { xs: 800, md: "auto" } }}>
+            <TableHead>
+              <TableRow sx={{ bgcolor: "grey.100" }}>
+                <TableCell sx={{ fontWeight: 600 }}>Client Name</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Phone</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Email</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Company</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Source</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Assigned To</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Remarks</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
+              </TableRow>
+            </TableHead>
 
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog("add")}
-        >
-          Add Lead
-        </Button>
-      </Box>
+            <TableBody>
+              {leads
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((lead) => (
+                  <TableRow key={lead.id} hover>
+                    <TableCell>{lead.client_name}</TableCell>
+                    <TableCell>{lead.phone}</TableCell>
+                    <TableCell>{lead.email}</TableCell>
+                    <TableCell>{lead.company}</TableCell>
+                    <TableCell>{lead.source}</TableCell>
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Client Name</TableCell>
-              <TableCell>Phone</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Company</TableCell>
-              <TableCell>Source</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Assigned To</TableCell>
-              <TableCell>Remarks</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
+                    <TableCell>
+                      <Chip
+                        label={lead.status}
+                        color={getStatusColor(lead.status)}
+                      />
+                    </TableCell>
 
-          <TableBody>
-            {leads
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((lead) => (
-                <TableRow key={lead.id}>
-                  <TableCell>{lead.client_name}</TableCell>
-                  <TableCell>{lead.phone}</TableCell>
-                  <TableCell>{lead.email}</TableCell>
-                  <TableCell>{lead.company}</TableCell>
-                  <TableCell>{lead.source}</TableCell>
+                    <TableCell>{lead.assigned_name}</TableCell>
 
-                  <TableCell>
-                    <Chip
-                      label={lead.status}
-                      color={getStatusColor(lead.status)}
-                    />
-                  </TableCell>
+                    <TableCell>{lead.remarks}</TableCell>
 
-                  <TableCell>{lead.assigned_name}</TableCell>
+                    <TableCell>
+                      <Box sx={{ display: "flex", justifyContent: "center" }}>
+                      <IconButton onClick={() => handleOpenDialog("edit", lead)}>
+                        <EditIcon />
+                      </IconButton>
 
-                  <TableCell>{lead.remarks}</TableCell>
-
-                  <TableCell>
-                    <IconButton onClick={() => handleOpenDialog("edit", lead)}>
-                      <EditIcon />
-                    </IconButton>
-
-                    <IconButton
-                      color="error"
-                      onClick={() => handleDelete(lead.id)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      <TablePagination
-        component="div"
-        rowsPerPageOptions={[5, 10, 25]}
-        count={leads.length}
-        rowsPerPage={rowsPerPage}
-        page={page}
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-      />
+                      <IconButton
+                        color="error"
+                        onClick={() => handleDelete(lead.id)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={leads.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
+      </DataTableCard>
 
       <LeadForm
         open={openDialog}
@@ -378,7 +381,7 @@ const { showSnackbar } = useSnackbar();
         initialData={currentLead}
         mode={dialogMode}
       />
-    </Box>
+    </PageContainer>
   );
 };
 

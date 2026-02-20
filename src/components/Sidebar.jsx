@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Drawer,
   List,
@@ -8,6 +8,7 @@ import {
   ListItemText,
   Box,
   Typography,
+  Collapse,
 } from "@mui/material";
 
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -16,6 +17,8 @@ import AssignmentIcon from "@mui/icons-material/Assignment";
 import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import BusinessIcon from "@mui/icons-material/Business";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
+import ExpandLess from "@mui/icons-material/ExpandLess";
+import ExpandMore from "@mui/icons-material/ExpandMore";
 
 import { useAuth } from "../context/AuthContext";
 import { Link, useLocation } from "react-router-dom";
@@ -78,6 +81,7 @@ const menuItems = [
 
 const Sidebar = ({ drawerWidth, isOpen, handleDrawerToggle }) => {
   const location = useLocation();
+  const [rolesOpen, setRolesOpen] = useState(true);
 const { user } = useAuth();
 const hasAccess = (moduleName) => {
   if (!user) return false;
@@ -152,19 +156,32 @@ const hasAccess = (moduleName) => {
             return (
               <React.Fragment key={item.text}>
                 {/* Parent Title */}
-                <ListItem sx={{ mt: 0}}>
-                  <ListItemText
-                    primary={item.text}
-                    primaryTypographyProps={{
-                      fontWeight: 700,
-                      fontSize: 12,
-                      color: "#3e2929",
-                      textTransform: "uppercase",
+                <ListItem disablePadding sx={{ mb: 0 }}>
+                  <ListItemButton
+                    onClick={() => setRolesOpen(!rolesOpen)}
+                    sx={{
+                      borderRadius: 2,
+                      "&:hover": {
+                        backgroundColor: "#3e29294c",
+                      },
                     }}
-                  />
+                  >
+                    <ListItemIcon sx={{ color: "#3e2929" }}>
+                      {item.icon}
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={item.text}
+                      primaryTypographyProps={{
+                        fontSize: 13.5,
+                        fontWeight: 500,
+                      }}
+                    />
+                    {rolesOpen ? <ExpandLess /> : <ExpandMore />}
+                  </ListItemButton>
                 </ListItem>
 
                 {/* Children */}
+                <Collapse in={rolesOpen} timeout="auto" unmountOnExit>
                 {visibleChildren.map((child) => {
                   const isActive = location.pathname.startsWith(child.path);
 
@@ -196,6 +213,7 @@ const hasAccess = (moduleName) => {
                     </ListItem>
                   );
                 })}
+                </Collapse>
               </React.Fragment>
             );
           }

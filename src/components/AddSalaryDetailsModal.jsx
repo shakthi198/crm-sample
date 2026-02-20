@@ -329,33 +329,32 @@ const token = localStorage.getItem("token");
         fullWidth
         PaperProps={{
           sx: {
-            borderRadius: { xs: 2, sm: 3 },
-            m: { xs: 1, sm: 2 },
+            borderRadius: '16px',
+            boxShadow: '0 24px 48px rgba(0,0,0,0.2)',
+            overflow: 'hidden'
           },
         }}
       >
         <DialogTitle
           sx={{
-            fontWeight: 700,
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
+            px: 4,
+            py: 2.5,
+            borderBottom: "1px solid",
+            borderColor: "divider"
           }}
         >
-          <Typography variant="h6" fontWeight={700}>
+          <Typography variant="h5" fontWeight={700} sx={{ fontFamily: 'Montserrat', color: '#0f172a' }}>
             Add Salary Details
           </Typography>
-          <IconButton onClick={onClose} edge="end">
+          <IconButton onClick={onClose} size="small" sx={{ bgcolor: 'action.hover' }}>
             <CloseIcon />
           </IconButton>
         </DialogTitle>
 
-        <DialogContent
-          sx={{
-            px: { xs: 2, sm: 3 },
-            py: { xs: 2, sm: 3 },
-          }}
-        >
+        <DialogContent dividers sx={{ p: 4, bgcolor: '#f8f9fc' }}>
           <Grid container spacing={3}>
             <Grid
               item
@@ -487,22 +486,16 @@ const token = localStorage.getItem("token");
           </Grid>
         </DialogContent>
 
-        <DialogActions
-          sx={{
-            px: { xs: 2, sm: 3 },
-            py: 2,
-            flexDirection: { xs: "column", sm: "row" },
-            gap: { xs: 1.5, sm: 1 },
-          }}
-        >
-          <Button onClick={onClose} sx={{ width: { xs: "100%", sm: "auto" } }}>
+        <DialogActions sx={{ p: 3, px: 4, borderTop: '1px solid', borderColor: 'divider' }}>
+          <Button onClick={onClose} color="inherit" variant="outlined" sx={{ borderRadius: '8px', textTransform: 'none', px: 3, height: 44, borderColor: 'divider' }}>
             Cancel
           </Button>
 
           <Button
             variant="contained"
             onClick={handleSave}
-            sx={{ width: { xs: "100%", sm: "auto" } }}
+            disableElevation
+            sx={{ borderRadius: '8px', px: 4, height: 44, textTransform: 'none', fontWeight: 600 }}
           >
             Save Salary
           </Button>

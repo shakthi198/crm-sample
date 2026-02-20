@@ -350,7 +350,8 @@ const AttendancePage = () => {
 
   return (
     <PageContainer
-      title="Attendance"
+      title="Attendance Management"
+      subtitle="Track and manage employee attendance"
       action={
         <Stack direction="row" spacing={2}>
           <Button

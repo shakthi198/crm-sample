@@ -188,11 +188,10 @@ const UserProfileModal = ({ open, onClose, user }) => {
             <DialogContent dividers sx={{ p: 0, border: 'none' }}>
                 {/* Header Section */}
                 <Box sx={{
-                    bgcolor: 'background.paper', // Keep white or use theme color? Request said "Keep content area white", but Header existing was theme color. 
-                    // Let's stick to the existing header style but larger.
-                    background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+                    bgcolor: 'background.paper',
+                    background: `linear-gradient(135deg, #7D5A50 0%, #5D4037 100%)`,
                     color: 'white',
-                    p: 5, // Increased padding
+                    p: 5,
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
@@ -200,10 +199,10 @@ const UserProfileModal = ({ open, onClose, user }) => {
                 }}>
                     <Avatar
                         sx={{
-                            width: 100, // Larger Avatar
+                            width: 100,
                             height: 100,
                             bgcolor: 'white',
-                            color: theme.palette.primary.main,
+                            color: '#7D5A50',
                             fontSize: '3rem',
                             fontWeight: 800,
                             border: '4px solid rgba(255,255,255,0.3)',
@@ -238,7 +237,7 @@ const UserProfileModal = ({ open, onClose, user }) => {
                             }}
                         />
                     ) : (
-                        <Typography variant="h4" fontWeight={700} gutterBottom sx={{ fontFamily: 'Montserrat' }}>
+                        <Typography variant="h4" fontWeight={700} gutterBottom sx={{ fontFamily: 'Montserrat', color: 'white' }}>
                             {formData.name}
                         </Typography>
                     )}
@@ -253,8 +252,8 @@ const UserProfileModal = ({ open, onClose, user }) => {
                         gap: 1,
                         mt: 1
                     }}>
-                        <VerifiedUserIcon sx={{ fontSize: 18 }} />
-                        <Typography variant="subtitle1" fontWeight={600} sx={{ letterSpacing: '0.02em' }}>
+                        <VerifiedUserIcon sx={{ fontSize: 18, color: '#ffffff' }} />
+                        <Typography variant="subtitle1" fontWeight={600} sx={{ letterSpacing: '0.02em', color: '#ffffff' }}>
                             {userDetails.role}
                         </Typography>
                     </Box>

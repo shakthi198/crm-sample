@@ -64,7 +64,7 @@ const SummaryCards = ({ items, showChart = false }) => {
                   {item.icon}
                 </Box>
 
-                <Box>
+                <Box sx={{ overflow: "hidden", minWidth: 0, flex: 1 }}>
                   <Typography
                     variant="body2"
                     sx={{
@@ -82,14 +82,18 @@ const SummaryCards = ({ items, showChart = false }) => {
 
               <Typography
                 variant="h4"
+                title={item.value}
                 sx={{
                   fontWeight: 700,
                   color: "text.primary",
                   fontSize: '1.75rem',
                   lineHeight: 1.2,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  width: "100%"
                 //   ml: 0,
                 //   mt: showChart ? 0 : 0.35,
-                //   whiteSpace: "nowrap",
                 //   textAlign: showChart ? "left" : item.valueAlign || "center",
                 }}
               >

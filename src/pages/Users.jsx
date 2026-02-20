@@ -2,28 +2,21 @@ import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
-  Card,
-  CardContent,
-  Typography,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
+  TablePagination,
   Chip,
   IconButton,
-  useTheme,
-  useMediaQuery,
-  Grid,
-  Paper,
+  Typography,
 } from "@mui/material";
-import { alpha } from "@mui/material/styles";
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Person as PersonIcon,
 } from "@mui/icons-material";
 
 import PageContainer from "../components/PageContainer";
@@ -33,11 +26,9 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import ConfirmationDialog from "../components/ConfirmationDialog";
 import { useAuth } from "../context/AuthContext";
 import apiEndpoints from "../apiconfig";
-const BASE_URL = apiEndpoints.baseUrl;
 
 const Users = () => {
-  const theme = useTheme();
-  const { user } = useAuth(); // rename to avoid conflict with users list
+  const { user } = useAuth();
 
   const getHeaders = () => {
     let headers = { "Content-Type": "application/json" };
@@ -49,19 +40,19 @@ const Users = () => {
     return headers;
   };
 
-  // ... (rest of state initialization)
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const [openModal, setOpenModal] = useState(false);
-  const [modalMode, setModalMode] = useState("add"); // 'add' | 'edit'
+  const [modalMode, setModalMode] = useState("add");
   const [currentUser, setCurrentUser] = useState(null);
 
   const [openConfirm, setOpenConfirm] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Load Users
   useEffect(() => {
     loadUsers();
     loadRoles();
@@ -89,7 +80,6 @@ const Users = () => {
       });
       const data = await response.json();
       if (data.success && Array.isArray(data.data)) {
-        // Map to frontend structure
         const mappedPoints = data.data.map((u) => ({
           id: u.user_guid,
           name: u.name || "Unknown",
@@ -100,7 +90,6 @@ const Users = () => {
           user_guid: u.user_guid,
           organization_guid: u.organization_guid,
         }));
-        console.log("Mapped users:", mappedPoints);
         setUsers(mappedPoints);
       }
     } catch (error) {
@@ -137,7 +126,7 @@ const Users = () => {
         });
       } else {
         await fetch(apiEndpoints.users, {
-          method: "POST", // Backend often uses POST for updates
+          method: "POST",
           headers: getHeaders(),
           body: JSON.stringify({
             ...formData,
@@ -170,9 +159,18 @@ const Users = () => {
     }
   };
 
-  // Role-based UI logic
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
   const canAddUser = user?.role === "Super Admin" || user?.role === "Admin";
   const canEditDelete = user?.role === "Super Admin" || user?.role === "Admin";
+
   if (loading) {
     return (
       <LoadingSpinner
@@ -185,21 +183,14 @@ const Users = () => {
 
   return (
     <PageContainer
-      title="Users"
-      subtitle="Manage system users and their access."
+      title="Users Management"
+      subtitle="Manage system users and access"
       action={
         canAddUser && (
           <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={handleAddClick}
-            sx={{
-              background: theme.palette.primary.main,
-              "&:hover": { background: theme.palette.primary.dark },
-              boxShadow: `0 4px 12px ${theme.palette.primary.light}80`,
-              borderRadius: "8px",
-              px: 3,
-            }}
           >
             Add User
           </Button>
@@ -219,14 +210,14 @@ const Users = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {users.length > 0 ? (
-                users.map((row) => (
+              {users
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((row) => (
                   <TableRow key={row.id} hover>
                     <TableCell>
                       <Box
                         sx={{ display: "flex", alignItems: "center", gap: 2 }}
                       >
-                        {/* Simple Avatar instead of styled box */}
                         <Box
                           sx={{
                             width: 32,
@@ -276,7 +267,7 @@ const Users = () => {
                     </TableCell>
                     <TableCell>
                       {canEditDelete && (
-                        <Box sx={{ display: "flex", gap: 1 }}>
+                        <Box sx={{ display: "flex", justifyContent: "center" }}>
                           <IconButton
                             size="small"
                             color="primary"
@@ -295,8 +286,8 @@ const Users = () => {
                       )}
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
+                ))}
+              {users.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={5} align="center" sx={{ py: 6 }}>
                     <Typography color="text.secondary">
@@ -308,6 +299,15 @@ const Users = () => {
             </TableBody>
           </Table>
         </TableContainer>
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={users.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
       </DataTableCard>
 
       <UserFormModal
