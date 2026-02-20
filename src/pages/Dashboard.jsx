@@ -275,7 +275,7 @@ const Dashboard = () => {
   return (
     <Box
       sx={{
-        p: { xs: 2, sm: 3 },
+        p: { xs: 2, md: 4, lg: 5 },
         position: "relative",
         minHeight: "calc(100vh - 64px)",
         display: loading && !data ? "flex" : "block",

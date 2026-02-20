@@ -96,7 +96,7 @@ const SalaryDetailsModal = ({ open, onClose, employees = [] }) => {
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     gap: 2,
-                    px: { xs: 2, sm: 4 },
+                    px: 4,
                     py: 2.5,
                     borderBottom: '1px solid',
                     borderColor: 'divider',
@@ -136,11 +136,11 @@ const SalaryDetailsModal = ({ open, onClose, employees = [] }) => {
 
                 <DialogContent dividers sx={{ p: 0, bgcolor: '#f8f9fc' }}>
                     {loading ? (
-                        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px', p: 4 }}>
                             <CircularProgress />
                         </Box>
                     ) : (
-                        <TableContainer sx={{ maxHeight: '100%' }}>
+                        <TableContainer sx={{ maxHeight: 'calc(80vh - 250px)' }}>
                             <Table stickyHeader>
                                 <TableHead>
                                     <TableRow>
@@ -187,8 +187,8 @@ const SalaryDetailsModal = ({ open, onClose, employees = [] }) => {
                     )}
                 </DialogContent>
 
-                <DialogActions sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
-                    <Button onClick={onClose} color="inherit">Close</Button>
+                <DialogActions sx={{ p: 3, px: 4, borderTop: '1px solid', borderColor: 'divider' }}>
+                    <Button onClick={onClose} color="inherit" variant="outlined" sx={{ borderRadius: '8px', textTransform: 'none', px: 3, height: 44, borderColor: 'divider' }}>Close</Button>
                 </DialogActions>
             </Dialog>
 

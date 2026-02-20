@@ -272,15 +272,33 @@ const AdvanceEntryModal = ({ open, onClose, onSave }) => {
     =============================== */
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>
-        Advance Salary Entry
-        <IconButton onClick={onClose} sx={{ float: "right" }}>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: '16px',
+          boxShadow: '0 24px 48px rgba(0,0,0,0.2)',
+          overflow: 'hidden'
+        }
+      }}
+    >
+      <DialogTitle sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        px: 4,
+        py: 2.5,
+        borderBottom: '1px solid',
+        borderColor: 'divider'
+      }}>
+        <Typography variant="h5" fontWeight={700} sx={{ fontFamily: 'Montserrat', color: '#0f172a' }}>
+          Advance Salary Entry
+        </Typography>
+        <IconButton onClick={onClose} size="small" sx={{ bgcolor: 'action.hover' }}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
 
-      <DialogContent>
+      <DialogContent dividers sx={{ p: 4, bgcolor: '#f8f9fc' }}>
         <Box
           sx={{
             display: "grid",
@@ -368,10 +386,12 @@ const AdvanceEntryModal = ({ open, onClose, onSave }) => {
         </Box>
       </DialogContent>
 
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+      <DialogActions sx={{ p: 3, px: 4, borderTop: '1px solid', borderColor: 'divider' }}>
+        <Button onClick={onClose} color="inherit" variant="outlined" sx={{ borderRadius: '8px', textTransform: 'none', px: 3, height: 44, borderColor: 'divider' }}>
+          Cancel
+        </Button>
 
-        <Button variant="contained" onClick={handleSave}>
+        <Button variant="contained" onClick={handleSave} disableElevation sx={{ borderRadius: '8px', px: 4, height: 44, textTransform: 'none', fontWeight: 600 }}>
           Save Advance
         </Button>
       </DialogActions>

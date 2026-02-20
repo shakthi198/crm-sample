@@ -16,6 +16,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TablePagination,
   Paper,
   IconButton,
   Chip,
@@ -34,6 +35,7 @@ import {
   Close as CloseIcon,
 } from "@mui/icons-material";
 import PageContainer from "../components/PageContainer";
+import DataTableCard from "../components/DataTableCard";
 import apiEndpoints from "../apiconfig";
 
 const emptyFormData = {
@@ -138,6 +140,8 @@ const Organization = () => {
     `${apiEndpoints.organizations}`;
 
   const [organizations, setOrganizations] = useState([]);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
@@ -311,6 +315,15 @@ const Organization = () => {
     setEditOpen(false);
   };
 
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
   return (
     <PageContainer
       title="Organizations"
@@ -326,63 +339,55 @@ const Organization = () => {
         </Button>
       }
     >
-      <Box sx={{ maxWidth: 1600, margin: "0 auto" }}>
-        <TableContainer
-          component={Paper}
-          sx={{
-            borderRadius: 1,
-            overflow: "auto",
-            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-          }}
-        >
-          <Table>
-            <TableHead sx={{ bgcolor: "#f8fafc" }}>
-              <TableRow>
-                <TableCell>Company Name</TableCell>
-                <TableCell>Email</TableCell>
-                <TableCell>Phone</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell align="center">Actions</TableCell>
+      <DataTableCard>
+        <TableContainer sx={{ overflowX: "auto" }}>
+          <Table sx={{ minWidth: { xs: 800, md: "auto" } }}>
+            <TableHead>
+              <TableRow sx={{ bgcolor: "grey.100" }}>
+                <TableCell sx={{ fontWeight: 600 }}>Company Name</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Email</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Phone</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 600 }}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {organizations.map((org) => (
+              {organizations
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((org) => (
                 <TableRow key={org.organization_guid || org.id} hover>
                   <TableCell>{org.company_name}</TableCell>
                   <TableCell>{org.email}</TableCell>
                   <TableCell>{org.phone_number}</TableCell>
                   <TableCell>
-                    <Chip label={org.status} />
+                    <Chip label={org.status} size="small" sx={{
+                      fontWeight: 600,
+                      borderRadius: "6px",
+                      fontSize: "0.75rem",
+                      minWidth: "100px",
+                      justifyContent: "center",
+                    }} />
                   </TableCell>
                   <TableCell align="center">
                     <Stack direction="row" spacing={1} justifyContent="center">
                       <IconButton
                         size="small"
                         onClick={() => handleView(org)}
-                        sx={{
-                          color: "primary.main",
-                          "&:hover": { bgcolor: "#eff6ff" },
-                        }}
+                        color="primary"
                       >
                         <ViewIcon fontSize="small" />
                       </IconButton>
                       <IconButton
                         size="small"
                         onClick={() => handleEdit(org)}
-                        sx={{
-                          color: "#f59e0b",
-                          "&:hover": { bgcolor: "#fef3c7" },
-                        }}
+                        color="primary"
                       >
                         <EditIcon fontSize="small" />
                       </IconButton>
                       <IconButton
                         size="small"
                         onClick={() => handleDelete(org.organization_guid)}
-                        sx={{
-                          color: "#ef4444",
-                          "&:hover": { bgcolor: "#fee2e2" },
-                        }}
+                        color="error"
                       >
                         <DeleteIcon fontSize="small" />
                       </IconButton>
@@ -393,84 +398,89 @@ const Organization = () => {
             </TableBody>
           </Table>
         </TableContainer>
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={organizations.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
+      </DataTableCard>
 
         <Dialog
           open={addOpen || editOpen}
           onClose={closeFormModal}
-          scroll="paper"
-          maxWidth={false}
+          maxWidth="md"
+          fullWidth
           PaperProps={{
             sx: {
               borderRadius: "16px",
               width: "100%",
               maxWidth: "820px",
-              m: 2,
+              boxShadow: "0 24px 48px rgba(0,0,0,0.2)",
+              overflow: "hidden",
             },
           }}
         >
           <DialogTitle
-            component="div"
             sx={{
-              p: 3,
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              bgcolor: "#fff",
-              borderBottom: "1px solid #e2e8f0",
+              px: 4,
+              py: 2.5,
+              borderBottom: "1px solid",
+              borderColor: "divider",
+              bgcolor: "background.paper",
             }}
           >
             <Typography
               variant="h5"
-              sx={{
-                fontWeight: 700,
-                color: "#1e293b",
-                fontFamily: "Montserrat, sans-serif",
-              }}
+              fontWeight={700}
+              sx={{ fontFamily: "Montserrat", color: "#0f172a" }}
             >
               {addOpen ? "Add Organization" : "Edit Organization"}
             </Typography>
             <IconButton
-              size="small"
               onClick={closeFormModal}
-              sx={{ color: "#64748b" }}
+              size="small"
+              sx={{ bgcolor: "action.hover" }}
             >
               <CloseIcon />
             </IconButton>
           </DialogTitle>
 
-          <DialogContent sx={{ p: 4, bgcolor: "#f8fafc" }}>
+          <DialogContent dividers sx={{ p: 4, bgcolor: "#f8f9fc" }}>
             <Box
               sx={{
                 display: "grid",
                 gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-                gap: 2.5,
-                alignItems: "stretch",
+                gap: 3,
               }}
             >
-              <Paper
-                elevation={0}
+              <Box
                 sx={{
-                  p: 2,
-                  borderRadius: "10px",
-                  border: "1px solid #e2e8f0",
+                  height: "100%",
                   display: "flex",
                   flexDirection: "column",
-                  gap: 1,
+                  gap: 1.5,
+                  p: 2,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: "12px",
+                  bgcolor: "background.paper",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
                 }}
               >
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                    mb: 0.5,
-                  }}
-                >
-                  <Storefront sx={{ fontSize: 18, color: "#64748b" }} />
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Storefront sx={{ fontSize: 20, color: "primary.main" }} />
                   <Typography
-                    variant="subtitle2"
+                    variant="caption"
                     fontWeight={600}
                     color="text.secondary"
+                    sx={{ textTransform: "uppercase", letterSpacing: "0.05em" }}
                   >
                     Company Name
                   </Typography>
@@ -485,32 +495,29 @@ const Organization = () => {
                   error={!!errors.company_name}
                   helperText={errors.company_name}
                 />
-              </Paper>
+              </Box>
 
-              <Paper
-                elevation={0}
+              <Box
                 sx={{
-                  p: 2,
-                  borderRadius: "10px",
-                  border: "1px solid #e2e8f0",
+                  height: "100%",
                   display: "flex",
                   flexDirection: "column",
-                  gap: 1,
+                  gap: 1.5,
+                  p: 2,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: "12px",
+                  bgcolor: "background.paper",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
                 }}
               >
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                    mb: 0.5,
-                  }}
-                >
-                  <EmailIcon sx={{ fontSize: 18, color: "#64748b" }} />
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <EmailIcon sx={{ fontSize: 20, color: "primary.main" }} />
                   <Typography
-                    variant="subtitle2"
+                    variant="caption"
                     fontWeight={600}
                     color="text.secondary"
+                    sx={{ textTransform: "uppercase", letterSpacing: "0.05em" }}
                   >
                     Email
                   </Typography>
@@ -523,32 +530,29 @@ const Organization = () => {
                   error={!!errors.email}
                   helperText={errors.email}
                 />
-              </Paper>
+              </Box>
 
-              <Paper
-                elevation={0}
+              <Box
                 sx={{
-                  p: 2,
-                  borderRadius: "10px",
-                  border: "1px solid #e2e8f0",
+                  height: "100%",
                   display: "flex",
                   flexDirection: "column",
-                  gap: 1,
+                  gap: 1.5,
+                  p: 2,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: "12px",
+                  bgcolor: "background.paper",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
                 }}
               >
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                    mb: 0.5,
-                  }}
-                >
-                  <LocalPhone sx={{ fontSize: 18, color: "#64748b" }} />
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <LocalPhone sx={{ fontSize: 20, color: "primary.main" }} />
                   <Typography
-                    variant="subtitle2"
+                    variant="caption"
                     fontWeight={600}
                     color="text.secondary"
+                    sx={{ textTransform: "uppercase", letterSpacing: "0.05em" }}
                   >
                     Phone Number
                   </Typography>
@@ -563,32 +567,29 @@ const Organization = () => {
                   error={!!errors.phone_number}
                   helperText={errors.phone_number}
                 />
-              </Paper>
+              </Box>
 
-              <Paper
-                elevation={0}
+              <Box
                 sx={{
-                  p: 2,
-                  borderRadius: "10px",
-                  border: "1px solid #e2e8f0",
+                  height: "100%",
                   display: "flex",
                   flexDirection: "column",
-                  gap: 1,
+                  gap: 1.5,
+                  p: 2,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: "12px",
+                  bgcolor: "background.paper",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
                 }}
               >
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                    mb: 0.5,
-                  }}
-                >
-                  <Info sx={{ fontSize: 18, color: "#64748b" }} />
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Info sx={{ fontSize: 20, color: "primary.main" }} />
                   <Typography
-                    variant="subtitle2"
+                    variant="caption"
                     fontWeight={600}
                     color="text.secondary"
+                    sx={{ textTransform: "uppercase", letterSpacing: "0.05em" }}
                   >
                     Status
                   </Typography>
@@ -602,33 +603,30 @@ const Organization = () => {
                   <MenuItem value="Active">Active</MenuItem>
                   <MenuItem value="Inactive">Inactive</MenuItem>
                 </TextField>
-              </Paper>
+              </Box>
 
-              <Paper
-                elevation={0}
+              <Box
                 sx={{
-                  p: 2,
-                  borderRadius: "10px",
-                  border: "1px solid #e2e8f0",
+                  height: "100%",
                   display: "flex",
                   flexDirection: "column",
-                  gap: 1,
+                  gap: 1.5,
+                  p: 2,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: "12px",
+                  bgcolor: "background.paper",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
                   gridColumn: { xs: "1", md: "1 / 3" },
                 }}
               >
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                    mb: 0.5,
-                  }}
-                >
-                  <Map sx={{ fontSize: 18, color: "#64748b" }} />
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Map sx={{ fontSize: 20, color: "primary.main" }} />
                   <Typography
-                    variant="subtitle2"
+                    variant="caption"
                     fontWeight={600}
                     color="text.secondary"
+                    sx={{ textTransform: "uppercase", letterSpacing: "0.05em" }}
                   >
                     Physical Address
                   </Typography>
@@ -645,31 +643,23 @@ const Organization = () => {
                   error={!!errors.physical_address}
                   helperText={errors.physical_address}
                 />
-              </Paper>
+              </Box>
             </Box>
           </DialogContent>
 
           <DialogActions
-            sx={{
-              p: 3,
-              pt: 2,
-              gap: 2,
-              bgcolor: "#fff",
-              borderTop: "1px solid #e2e8f0",
-            }}
+            sx={{ p: 3, px: 4, borderTop: "1px solid", borderColor: "divider" }}
           >
             <Button
-              variant="outlined"
               onClick={closeFormModal}
+              color="inherit"
+              variant="outlined"
               sx={{
-                px: 4,
-                py: 1.25,
                 borderRadius: "8px",
-                color: "#64748b",
-                borderColor: "#cbd5e1",
                 textTransform: "none",
-                fontWeight: 600,
-                "&:hover": { bgcolor: "#f1f5f9", borderColor: "#94a3b8" },
+                px: 3,
+                height: 44,
+                borderColor: "divider",
               }}
             >
               Cancel
@@ -679,16 +669,14 @@ const Organization = () => {
               variant="contained"
               disableElevation
               sx={{
-                px: 5,
-                py: 1.25,
                 borderRadius: "8px",
-                bgcolor: "#3D52A0",
+                px: 4,
+                height: 44,
                 textTransform: "none",
                 fontWeight: 600,
-                "&:hover": { bgcolor: "#2a3b75" },
               }}
             >
-              {addOpen ? "Add Organization" : "Edit Organization"}
+              {addOpen ? "Add Organization" : "Update Organization"}
             </Button>
           </DialogActions>
         </Dialog>
@@ -837,7 +825,6 @@ const Organization = () => {
             </Button>
           </DialogActions>
         </Dialog>
-      </Box>
     </PageContainer>
   );
 };

@@ -83,7 +83,8 @@ const SalaryStatusModal = ({ open, onClose, onUpdateStatus, employees = [] }) =>
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            p: 3,
+            px: 4,
+            py: 2.5,
             borderBottom: "1px solid",
             borderColor: "divider",
           }}
@@ -105,7 +106,7 @@ const SalaryStatusModal = ({ open, onClose, onUpdateStatus, employees = [] }) =>
           </IconButton>
         </DialogTitle>
 
-        <DialogContent sx={{ p: 3, bgcolor: "#f8f9fc" }}>
+        <DialogContent dividers sx={{ p: 4, bgcolor: "#f8f9fc" }}>
           <Paper
             elevation={0}
             sx={{
@@ -220,15 +221,10 @@ const SalaryStatusModal = ({ open, onClose, onUpdateStatus, employees = [] }) =>
 
         <DialogActions
           sx={{
-            p: { xs: 2, sm: 3 },
+            p: 3,
+            px: 4,
             borderTop: "1px solid",
             borderColor: "divider",
-            flexDirection: { xs: "column-reverse", sm: "row" }, // Stack bottom-up visually? Or top-down? Usually primary action at bottom on mobile is easier to reach. Let's try column-reverse to put Primary at bottom, Cancel at top? or simpler column with Cancel at bottom.
-            // Standard material on mobile is often row-reverse or stacked with positive action first.
-            // But let's stick to standard column, maybe check user preference.
-            // Actually, let's keep it simple: column. Top to bottom: Cancel, Unpaid, Paid.
-            // Wait, user complained about size.
-            // Let's reduce padding and height.
             flexDirection: { xs: "column", sm: "row" },
             gap: { xs: 1.5, sm: 0 },
           }}
@@ -271,6 +267,12 @@ const SalaryStatusModal = ({ open, onClose, onUpdateStatus, employees = [] }) =>
               height: 40,
               width: { xs: "100%", sm: "auto" },
               bgcolor: theme.palette.primary.main,
+              '&.Mui-disabled': {
+                bgcolor: '#8b6f47',
+                color: '#fff',
+                opacity: 0.7,
+                cursor: 'not-allowed'
+              }
             }}
           >
             Mark as Paid

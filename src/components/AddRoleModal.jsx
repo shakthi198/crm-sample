@@ -74,8 +74,9 @@ const AddRoleModal = ({ open, onClose, onSave, roleToEdit }) => {
             fullWidth
             PaperProps={{
                 sx: {
-                    borderRadius: '12px',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                    borderRadius: '16px',
+                    boxShadow: '0 24px 48px rgba(0,0,0,0.2)',
+                    overflow: 'hidden'
                 }
             }}
         >
@@ -83,17 +84,20 @@ const AddRoleModal = ({ open, onClose, onSave, roleToEdit }) => {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                pb: 1
+                px: 4,
+                py: 2.5,
+                borderBottom: '1px solid',
+                borderColor: 'divider'
             }}>
-                <Typography variant="h6" fontWeight={600}>
+                <Typography variant="h5" fontWeight={700} sx={{ fontFamily: 'Montserrat', color: '#0f172a' }}>
                     {roleToEdit ? 'Edit Role' : 'Add New Role'}
                 </Typography>
-                <IconButton onClick={onClose} size="small">
+                <IconButton onClick={onClose} size="small" sx={{ bgcolor: 'action.hover' }}>
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>
 
-            <DialogContent dividers>
+            <DialogContent dividers sx={{ p: 4, bgcolor: '#f8f9fc' }}>
                 <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                     {/* Basic Info */}
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -119,67 +123,64 @@ const AddRoleModal = ({ open, onClose, onSave, roleToEdit }) => {
                     <Divider textAlign="left">Permissions</Divider>
 
                     {/* Permissions Grid */}
-                    <Box sx={{
-                        display: 'grid',
-                        gridTemplateColumns: {
-                            xs: '1fr',              // Mobile: 1 column
-                            sm: 'repeat(2, 1fr)',   // Tablet: 2 columns
-                            md: 'repeat(3, 1fr)'    // Desktop: 3 columns
-                        },
-                        gap: 2
-                    }}>
+                    <Grid container spacing={2}>
                         {AVAILABLE_PERMISSIONS.map((perm) => (
-                            <Box
-                                key={perm}
-                                onClick={() => handlePermissionChange(perm)}
-                                sx={{
-                                    p: 2,
-                                    borderRadius: '10px',
-                                    border: '1px solid',
-                                    borderColor: selectedPermissions.includes(perm) ? '#3D52A0' : 'divider',
-                                    bgcolor: selectedPermissions.includes(perm) ? 'rgba(61, 82, 160, 0.04)' : 'background.paper',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s',
-                                    '&:hover': {
-                                        borderColor: '#3D52A0',
-                                        bgcolor: 'rgba(61, 82, 160, 0.04)'
-                                    },
-                                    display: 'flex',
-                                    alignItems: 'center'
-                                }}
-                            >
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            checked={selectedPermissions.includes(perm)}
-                                            onChange={() => handlePermissionChange(perm)}
-                                            sx={{
-                                                color: '#8697C4',
-                                                '&.Mui-checked': { color: '#3D52A0' }
-                                            }}
-                                        />
-                                    }
-                                    label={
-                                        <Typography variant="body1" fontWeight={500} color={selectedPermissions.includes(perm) ? '#3D52A0' : 'text.primary'}>
-                                            {perm}
-                                        </Typography>
-                                    }
-                                    sx={{ m: 0, width: '100%', pointerEvents: 'none' }} // Pointer events handled by parent Box
-                                />
-                            </Box>
+                            <Grid item xs={12} sm={6} md={4} key={perm}>
+                                <Box
+                                    onClick={() => handlePermissionChange(perm)}
+                                    sx={{
+                                        p: 2,
+                                        borderRadius: '10px',
+                                        border: '1px solid',
+                                        borderColor: selectedPermissions.includes(perm) ? '#3D52A0' : 'divider',
+                                        bgcolor: selectedPermissions.includes(perm) ? 'rgba(61, 82, 160, 0.04)' : 'background.paper',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s',
+                                        height: '100%',
+                                        '&:hover': {
+                                            borderColor: '#3D52A0',
+                                            bgcolor: 'rgba(61, 82, 160, 0.04)'
+                                        },
+                                        display: 'flex',
+                                        alignItems: 'center'
+                                    }}
+                                >
+                                    <FormControlLabel
+                                        control={
+                                            <Checkbox
+                                                checked={selectedPermissions.includes(perm)}
+                                                onChange={() => handlePermissionChange(perm)}
+                                                sx={{
+                                                    color: '#8697C4',
+                                                    '&.Mui-checked': { color: '#3D52A0' }
+                                                }}
+                                            />
+                                        }
+                                        label={
+                                            <Typography variant="body1" fontWeight={500} color={selectedPermissions.includes(perm) ? '#3D52A0' : 'text.primary'}>
+                                                {perm}
+                                            </Typography>
+                                        }
+                                        sx={{ m: 0, width: '100%', pointerEvents: 'none' }}
+                                    />
+                                </Box>
+                            </Grid>
                         ))}
-                    </Box>
+                    </Grid>
                 </Box>
             </DialogContent>
 
-            <DialogActions sx={{ p: 2.5, gap: 1 }}>
+            <DialogActions sx={{ p: 3, px: 4, borderTop: '1px solid', borderColor: 'divider' }}>
                 <Button
                     onClick={onClose}
                     variant="outlined"
+                    color="inherit"
                     sx={{
-                        color: 'text.secondary',
-                        borderColor: 'divider',
-                        '&:hover': { borderColor: 'text.secondary', bgcolor: 'transparent' }
+                        borderRadius: '8px',
+                        textTransform: 'none',
+                        px: 3,
+                        height: 44,
+                        borderColor: 'divider'
                     }}
                 >
                     Cancel
@@ -189,8 +190,12 @@ const AddRoleModal = ({ open, onClose, onSave, roleToEdit }) => {
                     variant="contained"
                     disableElevation
                     sx={{
+                        borderRadius: '8px',
+                        px: 4,
+                        height: 44,
+                        textTransform: 'none',
+                        fontWeight: 600,
                         bgcolor: '#3D52A0',
-                        color: '#fff',
                         '&:hover': { bgcolor: '#2F3E80' }
                     }}
                 >

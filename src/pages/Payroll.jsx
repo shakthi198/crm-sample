@@ -11,6 +11,7 @@ import {
     TableContainer,
     TableHead,
     TableRow,
+    TablePagination,
     TextField,
     Chip,
     Tooltip,
@@ -55,6 +56,10 @@ const Payroll = () => {
     const [payrollData, setPayrollData] = useState([]);
     const [advanceHistory, setAdvanceHistory] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [page2, setPage2] = useState(0);
+    const [rowsPerPage2, setRowsPerPage2] = useState(10);
 
     const [selectedMonth, setSelectedMonth] = useState({
         month: new Date().getMonth(),
@@ -240,6 +245,24 @@ const token = localStorage.getItem("token");
         }
     };
 
+    const handleChangePage = (event, newPage) => {
+        setPage(newPage);
+    };
+
+    const handleChangeRowsPerPage = (event) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+    };
+
+    const handleChangePage2 = (event, newPage) => {
+        setPage2(newPage);
+    };
+
+    const handleChangeRowsPerPage2 = (event) => {
+        setRowsPerPage2(parseInt(event.target.value, 10));
+        setPage2(0);
+    };
+
 
     // Helper
     function getMonthName(monthIndex) {
@@ -326,7 +349,8 @@ const token = localStorage.getItem("token");
                 </Box>
 
                 {loading ? <LoadingSpinner /> : (
-                    <TableContainer sx={{ width: '100%', overflowX: 'auto' }}>
+                    <>
+                    <TableContainer sx={{ width: '100%', overflowX: 'auto', '&::-webkit-scrollbar': { height: '0px' }, scrollbarWidth: 'none' }}>
                         <Table stickyHeader sx={{ minWidth: 800 }}>
                             <TableHead>
                                 <TableRow>
@@ -339,7 +363,7 @@ const token = localStorage.getItem("token");
                             </TableHead>
                             <TableBody>
                                 {filteredPayrollData.length > 0 ? (
-                                    filteredPayrollData.map((row) => (
+                                    filteredPayrollData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
                                         <TableRow key={row.id} hover sx={{ '&:hover': { bgcolor: '#F9FAFB' } }}>
                                             <TableCell sx={{ fontWeight: 600, color: '#111827', fontFamily: 'Montserrat', pl: 3 }}>
                                                 {row.employee_name || row.name || 'N/A'}
@@ -378,6 +402,16 @@ const token = localStorage.getItem("token");
                             </TableBody>
                         </Table>
                     </TableContainer>
+                    <TablePagination
+                        rowsPerPageOptions={[5, 10, 25]}
+                        component="div"
+                        count={filteredPayrollData.length}
+                        rowsPerPage={rowsPerPage}
+                        page={page}
+                        onPageChange={handleChangePage}
+                        onRowsPerPageChange={handleChangeRowsPerPage}
+                    />
+                    </>
                 )}
             </Paper>
 
@@ -401,7 +435,7 @@ const token = localStorage.getItem("token");
                     </Typography>
                 </Box>
 
-                <TableContainer sx={{ width: '100%', overflowX: 'auto' }}>
+                <TableContainer sx={{ width: '100%', overflowX: 'auto', '&::-webkit-scrollbar': { height: '0px' }, scrollbarWidth: 'none' }}>
                     <Table stickyHeader sx={{ minWidth: 800 }}>
                         <TableHead>
                             <TableRow>
@@ -415,7 +449,7 @@ const token = localStorage.getItem("token");
                         </TableHead>
                         <TableBody>
                             {advanceHistory.length > 0 ? (
-                                advanceHistory.map((row) => (
+                                advanceHistory.slice(page2 * rowsPerPage2, page2 * rowsPerPage2 + rowsPerPage2).map((row) => (
                                     <TableRow key={row.id} hover>
                                         <TableCell sx={{ fontWeight: 600, color: '#111827', fontFamily: 'Montserrat', pl: 3 }}>{row.employeeName}</TableCell>
                                         <TableCell>
@@ -437,6 +471,15 @@ const token = localStorage.getItem("token");
                         </TableBody>
                     </Table>
                 </TableContainer>
+                <TablePagination
+                    rowsPerPageOptions={[5, 10, 25]}
+                    component="div"
+                    count={advanceHistory.length}
+                    rowsPerPage={rowsPerPage2}
+                    page={page2}
+                    onPageChange={handleChangePage2}
+                    onRowsPerPageChange={handleChangeRowsPerPage2}
+                />
             </Paper>
 
             {/* Modals */}

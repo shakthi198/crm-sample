@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Table,
   TableBody,
@@ -6,6 +6,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TablePagination,
   Paper,
   Chip,
   IconButton,
@@ -21,6 +22,8 @@ import { useAuth } from "../context/AuthContext";
 
 const BudgetTable = ({ budgets = [], onEdit, onStatusChange }) => {
   const { hasPermission } = useAuth();
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 const theme = useTheme();
 
 const getStatusSx = (status) => {
@@ -39,8 +42,19 @@ const getStatusSx = (status) => {
     "&:hover": { bgcolor: `${color}25` },
   };
 };
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
   return (
-    <TableContainer component={Paper} sx={{ overflowX: "auto" }}>
+    <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+    <TableContainer sx={{ overflowX: "auto" }}>
       <Table
         sx={{ minWidth: { xs: 800, md: "auto" } }}
         aria-label="budget table"
@@ -68,7 +82,9 @@ const getStatusSx = (status) => {
 
         <TableBody>
           {budgets.length > 0 ? (
-            budgets.map((row) => (
+            budgets
+              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              .map((row) => (
               <TableRow key={row.budget_guid} hover>
                 {/* Lead Name */}
                 <TableCell>{row.lead_name}</TableCell>
@@ -197,6 +213,16 @@ const getStatusSx = (status) => {
         </TableBody>
       </Table>
     </TableContainer>
+    <TablePagination
+      rowsPerPageOptions={[5, 10, 25]}
+      component="div"
+      count={budgets.length}
+      rowsPerPage={rowsPerPage}
+      page={page}
+      onPageChange={handleChangePage}
+      onRowsPerPageChange={handleChangeRowsPerPage}
+    />
+    </Paper>
   );
 };
 
