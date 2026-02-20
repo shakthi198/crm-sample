@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 19, 2026 at 07:01 PM
+-- Generation Time: Feb 20, 2026 at 12:35 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -20,6 +20,87 @@ SET time_zone = "+00:00";
 --
 -- Database: `crm_sample`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `activity_log`
+--
+
+CREATE TABLE `activity_log` (
+  `id` int(11) NOT NULL,
+  `user_guid` char(36) DEFAULT NULL,
+  `action` varchar(100) DEFAULT NULL,
+  `module` varchar(50) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `activity_log`
+--
+
+INSERT INTO `activity_log` (`id`, `user_guid`, `action`, `module`, `created_at`) VALUES
+(1, '49c4c122-0718-11f1-9c42-e21ad8f02b04', 'System Login', 'Authentication', '2026-02-17 06:26:19'),
+(2, '49c4c122-0718-11f1-9c42-e21ad8f02b04', 'Profile Updated', 'Users', '2026-02-17 06:26:19'),
+(3, '0b2b2746-0738-11f1-9c42-e21ad8f02b04', 'System Login', 'Authentication', '2026-02-17 06:26:19'),
+(4, '0b2b2746-0738-11f1-9c42-e21ad8f02b04', 'Profile Updated', 'Users', '2026-02-17 06:26:20'),
+(5, '4034e800-0764-11f1-922b-c59ab5bb8879', 'System Login', 'Authentication', '2026-02-17 06:26:20'),
+(6, '4034e800-0764-11f1-922b-c59ab5bb8879', 'Profile Updated', 'Users', '2026-02-17 06:26:20'),
+(7, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-17 06:28:05'),
+(8, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-17 06:29:40'),
+(9, 'df9364499c37f8e266cdc6d191ac3ef4', 'User Created', 'Users', '2026-02-17 06:58:53'),
+(10, 'b722aa0863414166067585d5da34292e', 'Logged In', 'Authentication', '2026-02-17 06:59:17'),
+(11, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-17 07:02:50'),
+(12, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-17 07:03:44'),
+(13, 'df9364499c37f8e266cdc6d191ac3ef4', 'User Updated', 'Users', '2026-02-17 07:15:41'),
+(14, 'df9364499c37f8e266cdc6d191ac3ef4', 'User Updated', 'Users', '2026-02-17 07:15:55'),
+(15, 'ADM-USER-001', 'Logged In', 'Authentication', '2026-02-17 07:16:19'),
+(16, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-17 07:16:36'),
+(17, '49c4c122-0718-11f1-9c42-e21ad8f02b04', 'Logged In', 'Authentication', '2026-02-17 07:41:04'),
+(18, '46cbf2bd-0af1-11f1-9a85-94280dc8c684', 'Logged In', 'Authentication', '2026-02-17 07:41:26'),
+(19, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-17 07:43:25'),
+(20, '49c4c122-0718-11f1-9c42-e21ad8f02b04', 'Logged In', 'Authentication', '2026-02-17 09:11:15'),
+(21, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-17 09:25:36'),
+(22, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-17 09:30:52'),
+(23, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-17 09:31:10'),
+(24, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-17 09:49:42'),
+(25, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-17 09:50:06'),
+(26, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-17 09:59:36'),
+(27, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-17 10:32:51'),
+(28, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-17 10:33:07'),
+(29, '49c4c122-0718-11f1-9c42-e21ad8f02b04', 'Logged In', 'Authentication', '2026-02-17 10:33:34'),
+(30, '46cbf2bd-0af1-11f1-9a85-94280dc8c684', 'Logged In', 'Authentication', '2026-02-17 10:33:43'),
+(31, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-17 12:42:35'),
+(32, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-17 12:47:31'),
+(33, '49c4c122-0718-11f1-9c42-e21ad8f02b04', 'Logged In', 'Authentication', '2026-02-18 04:51:39'),
+(34, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-18 04:51:54'),
+(35, '49c4c122-0718-11f1-9c42-e21ad8f02b04', 'Logged In', 'Authentication', '2026-02-18 04:56:15'),
+(36, '49c4c122-0718-11f1-9c42-e21ad8f02b04', 'Logged In', 'Authentication', '2026-02-20 05:32:21'),
+(37, '49c4c122-0718-11f1-9c42-e21ad8f02b04', 'Logged In', 'Authentication', '2026-02-20 06:02:11'),
+(38, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-20 06:02:27'),
+(39, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-20 06:04:47'),
+(40, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-20 06:09:12'),
+(41, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-20 06:10:25'),
+(42, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-20 06:11:41'),
+(43, 'df9364499c37f8e266cdc6d191ac3ef4', 'User Created', 'Users', '2026-02-20 06:16:32'),
+(44, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-20 06:16:53'),
+(45, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-20 06:21:32'),
+(46, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-20 06:21:37'),
+(47, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-20 06:23:02'),
+(48, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-20 06:23:06'),
+(49, '49c4c122-0718-11f1-9c42-e21ad8f02b04', 'Logged In', 'Authentication', '2026-02-20 06:40:03'),
+(50, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-20 06:40:23'),
+(51, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-20 06:41:02'),
+(52, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-20 06:41:07'),
+(53, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-20 06:41:11'),
+(54, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-20 06:41:17'),
+(55, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-20 09:35:38'),
+(56, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-20 10:04:41'),
+(57, 'df9364499c37f8e266cdc6d191ac3ef4', 'Logged In', 'Authentication', '2026-02-20 10:36:36'),
+(58, '49c4c122-0718-11f1-9c42-e21ad8f02b04', 'Logged In', 'Authentication', '2026-02-20 10:45:29'),
+(59, '49c4c122-0718-11f1-9c42-e21ad8f02b04', 'Logged In', 'Authentication', '2026-02-20 10:45:42'),
+(60, '49c4c122-0718-11f1-9c42-e21ad8f02b04', 'Logged In', 'Authentication', '2026-02-20 10:47:51'),
+(61, '49c4c122-0718-11f1-9c42-e21ad8f02b04', 'Logged In', 'Authentication', '2026-02-20 10:58:59');
 
 -- --------------------------------------------------------
 
@@ -379,7 +460,7 @@ CREATE TABLE `super_admin` (
 --
 
 INSERT INTO `super_admin` (`sa_id`, `super_admin_guid`, `username`, `email`, `password`, `full_name`, `is_active`, `created_at`, `updated_at`, `last_login`, `created_by`) VALUES
-(1, 'df9364499c37f8e266cdc6d191ac3ef4', 'superadmin', 'superadmin@crm.com', '$2y$10$0.PtcOYbGCw6KjvBhVL4O.2GN0hZxCKra/eU21ES0Wgl/CMcGTpei', 'Main Super Admin', 1, '2026-02-16 05:54:41', '2026-02-16 06:01:08', NULL, NULL);
+(1, 'df9364499c37f8e266cdc6d191ac3ef4', 'superadmin', 'superadmin@crm.com', '$2y$10$hkK8y6e6PBxfi2WP1eeVjuKVMXkT/QNN0tLRjrhd.oQi06vExHzFe', 'Main Super Admin', 1, '2026-02-16 05:54:41', '2026-02-20 10:36:36', '2026-02-20 10:36:36', NULL);
 
 -- --------------------------------------------------------
 
@@ -398,6 +479,10 @@ CREATE TABLE `users` (
   `role_guid` char(36) NOT NULL,
   `status` varchar(20) DEFAULT 'Active',
   `is_active` tinyint(1) DEFAULT 1,
+  `inactive_reason` text DEFAULT NULL,
+  `last_login` timestamp NULL DEFAULT NULL,
+  `is_deleted` tinyint(1) DEFAULT 0,
+  `deleted_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -405,9 +490,9 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `user_guid`, `admin_guid`, `organization_guid`, `name`, `email`, `password`, `role_guid`, `status`, `is_active`, `created_at`) VALUES
-(1, '49c4c122-0718-11f1-9c42-e21ad8f02b04', '49c4c1c6-0718-11f1-9c42-e21ad8f02b04', '3d6dd9d1-9e9c-4d48-ab19-32c2bed9cfea', 'admin', 'admin@sprout.com', '$2y$10$IUhf4uuRlkTfH3aTGbnfE.f6oPzjwDoIunonW3zaqi3IqX3IGpucm', '753da22e-0716-11f1-9c42-e21ad8f02b04', 'Active', 1, '2026-02-11 10:46:53'),
-(17, 'adc6e911-0cac-11f1-bbbb-14d424a2ecfa', '49c4c1c6-0718-11f1-9c42-e21ad8f02b04', '3d6dd9d1-9e9c-4d48-ab19-32c2bed9cfea', 'sample', 'sample@gmail.com', '$2y$10$LIy55hTbxpU/4xvEJvu0.OuMrIVzBVx4ueplFgJu4U.hdLDl5/.fq', '0cf0ee7b036fdda89039730a63117e63', 'Active', 1, '2026-02-18 09:31:58');
+INSERT INTO `users` (`id`, `user_guid`, `admin_guid`, `organization_guid`, `name`, `email`, `password`, `role_guid`, `status`, `is_active`, `inactive_reason`, `last_login`, `is_deleted`, `deleted_at`, `created_at`) VALUES
+(1, '49c4c122-0718-11f1-9c42-e21ad8f02b04', '49c4c1c6-0718-11f1-9c42-e21ad8f02b04', '3d6dd9d1-9e9c-4d48-ab19-32c2bed9cfea', 'admin', 'admin@sprout.com', '$2y$10$IUhf4uuRlkTfH3aTGbnfE.f6oPzjwDoIunonW3zaqi3IqX3IGpucm', '753da22e-0716-11f1-9c42-e21ad8f02b04', 'Active', 1, NULL, '2026-02-20 10:58:59', NULL, NULL, '2026-02-11 10:46:53'),
+(17, 'adc6e911-0cac-11f1-bbbb-14d424a2ecfa', '49c4c1c6-0718-11f1-9c42-e21ad8f02b04', '3d6dd9d1-9e9c-4d48-ab19-32c2bed9cfea', 'sample', 'sample@gmail.com', '$2y$10$LIy55hTbxpU/4xvEJvu0.OuMrIVzBVx4ueplFgJu4U.hdLDl5/.fq', '0cf0ee7b036fdda89039730a63117e63', 'Active', 1, NULL, NULL, NULL, NULL, '2026-02-18 09:31:58');
 
 -- --------------------------------------------------------
 
@@ -439,6 +524,12 @@ INSERT INTO `user_salary_details` (`id`, `user_guid`, `role_guid`, `organization
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `activity_log`
+--
+ALTER TABLE `activity_log`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `attendance`
@@ -551,6 +642,12 @@ ALTER TABLE `user_salary_details`
 --
 -- AUTO_INCREMENT for dumped tables
 --
+
+--
+-- AUTO_INCREMENT for table `activity_log`
+--
+ALTER TABLE `activity_log`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=62;
 
 --
 -- AUTO_INCREMENT for table `attendance`
