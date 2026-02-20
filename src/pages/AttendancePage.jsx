@@ -360,6 +360,7 @@ const AttendancePage = () => {
             onClick={() =>
               downloadCSV(attendanceList, "Full_Attendance_Report")
             }
+            sx={{ color: "#3e2929", borderColor: "#3e2929" }}
           >
             Full Report
           </Button>

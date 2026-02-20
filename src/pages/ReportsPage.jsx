@@ -248,7 +248,7 @@ const ReportsPage = () => {
             justifyContent: "space-between",
             alignItems: "center",
             flexDirection: { xs: "column", md: "row" },
-            gap: { xs: 2, md: 30, lg:47 },
+            gap: { xs: 2, md: 30, lg: 47 },
             width: "100%",
           }}
         >
@@ -281,35 +281,63 @@ const ReportsPage = () => {
                   fontWeight: 700,
                   borderRadius: "12px",
                   minHeight: 40,
-                  px: {xs:1,sm:2,md:3},
+                  px: { xs: 1, sm: 2, md: 3 },
                   "&.Mui-selected": {
                     bgcolor: "#fff",
-                    color: "#3D52A0",
+                    color: "#3e2929",
                     boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
                   },
                 },
               }}
             >
-              <Tab icon={<PayrollIcon sx={{ mr: 1, fontSize: 20 }} />} iconPosition="start" label="Payroll" />
-              <Tab icon={<AttendanceIcon sx={{ mr: 1, fontSize: 20 }} />} iconPosition="start" label="Attendance" />
+              <Tab
+                icon={<PayrollIcon sx={{ mr: 1, fontSize: 20 }} />}
+                iconPosition="start"
+                label="Payroll"
+              />
+              <Tab
+                icon={<AttendanceIcon sx={{ mr: 1, fontSize: 20 }} />}
+                iconPosition="start"
+                label="Attendance"
+              />
             </Tabs>
           </Box>
         </Box>
       }
     >
-
       {/* 3. FILTERS & ACTIONS */}
-      <Paper elevation={0} sx={{ border: '1px solid #e2e8f0', borderRadius: '24px', p: 3, mb: 4, bgcolor: '#ffffff' }}>
-        <Grid container spacing={8} alignItems="center">
-          <Grid item xs={12} md={4}>
+      <Paper
+        elevation={0}
+        sx={{
+          border: "1px solid #e2e8f0",
+          borderRadius: "24px",
+          p: 3,
+          mb: 4,
+          bgcolor: "#ffffff",
+        }}
+      >
+        <Grid
+          container
+          spacing={8}
+          alignItems="center"
+        >
+          <Grid item xs={12} md={4} sx={{ width: "100%"}}>
             <TextField
               fullWidth
               placeholder="Search by Employee "
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               InputProps={{
-                startAdornment: <InputAdornment position="start"><SearchIcon color="action" /></InputAdornment>,
-                sx: { borderRadius: '16px', bgcolor: '#f8fafc', '& fieldset': { border: 'none' } }
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon color="action" />
+                  </InputAdornment>
+                ),
+                sx: {
+                  borderRadius: "16px",
+                  bgcolor: "#f8fafc",
+                  "& fieldset": { border: "none" },
+                },
               }}
             />
           </Grid>
@@ -320,9 +348,11 @@ const ReportsPage = () => {
                 fullWidth
                 label="Start Date"
                 value={dateRange.start}
-                onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                onChange={(e) =>
+                  setDateRange({ ...dateRange, start: e.target.value })
+                }
                 InputLabelProps={{ shrink: true }}
-                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '16px' } }}
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "16px" } }}
               />
               <Typography color="text.secondary">-</Typography>
               <TextField
@@ -330,15 +360,42 @@ const ReportsPage = () => {
                 fullWidth
                 label="End Date"
                 value={dateRange.end}
-                onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                onChange={(e) =>
+                  setDateRange({ ...dateRange, end: e.target.value })
+                }
                 InputLabelProps={{ shrink: true }}
-                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '16px' } }}
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "16px" } }}
               />
             </Stack>
           </Grid>
-          <Grid item xs={12} md={4} sx={{ display: 'flex', justifyContent: { xs: 'flex-start', md: 'flex-end' }, gap: 2 }}>
-            <Button variant="outlined" startIcon={<DownloadIcon />} onClick={handleExportExcel} sx={{ borderRadius: '12px', height: 48, fontWeight: 700 }}>Excel</Button>
-            <Button variant="contained" startIcon={<DownloadIcon />} onClick={handleExportPDF} sx={{ borderRadius: '12px', height: 48, fontWeight: 700, bgcolor: '#3d52a0' }}>PDF</Button>
+          <Grid
+            item
+            xs={12}
+            md={4}
+            sx={{
+              display: "flex",
+              justifyContent: { xs: "flex-start", md: "flex-end" },
+              gap: 2,
+            }}
+          >
+            <Button
+              variant="outlined"
+              startIcon={<DownloadIcon />}
+              onClick={handleExportExcel}
+              sx={{ borderColor: "#3e2929", color: "#3e2929" }}
+            >
+              Excel
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<DownloadIcon />}
+              onClick={handleExportPDF}
+              sx={{
+                bgcolor: "#3e2929",
+              }}
+            >
+              PDF
+            </Button>
           </Grid>
         </Grid>
       </Paper>
@@ -387,7 +444,7 @@ const ReportsPage = () => {
                   variant="caption"
                   fontWeight={800}
                   color="text.secondary"
-                  sx={{ textTransform: "none", fontSize: '0.875rem' }}
+                  sx={{ textTransform: "none", fontSize: "0.875rem" }}
                 >
                   {metric.label}
                 </Typography>
@@ -406,16 +463,39 @@ const ReportsPage = () => {
         {activeTab === 0 ? (
           /* PAYROLL WIDGETS */
           <>
-
-            <Grid item xs={12} md={7} width={{ xs: "100%", sm: "100%", md: "32%" }}>
+            <Grid
+              item
+              xs={12}
+              md={7}
+              width={{ xs: "100%", sm: "100%", md: "48%", lg: "31%" }}
+            >
               <ChartCard title="Payment Status">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={[
-                        { name: 'Paid', value: payrollData.filter(p => p.status === 'Paid').length, fill: "#10b981" },
-                        { name: 'Pending', value: payrollData.filter(p => p.status === 'Pending' || p.status === 'Processing').length, fill: "#f59e0b" },
-                        { name: 'Unpaid', value: payrollData.filter(p => p.status === 'Unpaid').length, fill: "#ef4444" }
+                        {
+                          name: "Paid",
+                          value: payrollData.filter((p) => p.status === "Paid")
+                            .length,
+                          fill: "#10b981",
+                        },
+                        {
+                          name: "Pending",
+                          value: payrollData.filter(
+                            (p) =>
+                              p.status === "Pending" ||
+                              p.status === "Processing",
+                          ).length,
+                          fill: "#f59e0b",
+                        },
+                        {
+                          name: "Unpaid",
+                          value: payrollData.filter(
+                            (p) => p.status === "Unpaid",
+                          ).length,
+                          fill: "#ef4444",
+                        },
                       ]}
                       innerRadius={80}
                       outerRadius={100}
@@ -427,50 +507,140 @@ const ReportsPage = () => {
                       <Cell fill="#f59e0b" />
                       <Cell fill="#ef4444" />
                     </Pie>
-                    <Tooltip contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} />
-                    <Legend verticalAlign="bottom" height={76} iconType="circle" />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: "12px",
+                        border: "none",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      }}
+                    />
+                    <Legend
+                      verticalAlign="bottom"
+                      height={76}
+                      iconType="circle"
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </ChartCard>
             </Grid>
 
             {/* 2. Salary Cost by Role */}
-            <Grid item xs={12} md={6} width={{ xs: "100%", sm: "100%", md: "32%" }}>
+            <Grid
+              item
+              xs={12}
+              md={6}
+              width={{ xs: "100%", sm: "100%", md: "48%", lg: "32%" }}
+            >
               <ChartCard title="Cost by Role">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     layout="vertical"
-                    data={Object.values(payrollData.reduce((acc, curr) => {
-                      const r = curr.role || "Others";
-                      if (!acc[r]) acc[r] = { name: r, value: 0 };
-                      acc[r].value += Number(curr.net_salary || 0);
-                      return acc;
-                    }, {})).sort((a, b) => b.value - a.value).slice(0, 6)}
+                    data={Object.values(
+                      payrollData.reduce((acc, curr) => {
+                        const r = curr.role || "Others";
+                        if (!acc[r]) acc[r] = { name: r, value: 0 };
+                        acc[r].value += Number(curr.net_salary || 0);
+                        return acc;
+                      }, {}),
+                    )
+                      .sort((a, b) => b.value - a.value)
+                      .slice(0, 6)}
                     margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
                     barSize={32}
                   >
-                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      horizontal={true}
+                      vertical={false}
+                      stroke="#f1f5f9"
+                    />
                     <XAxis type="number" hide />
-                    <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} cursor={{ fill: '#f8fafc', opacity: 0.5 }} />
-                    <Bar dataKey="value" fill="#818cf8" radius={[0, 6, 6, 0]} background={{ fill: '#f8fafc', radius: 6 }} />
+                    <YAxis
+                      dataKey="name"
+                      type="category"
+                      width={100}
+                      tick={{ fontSize: 12, fill: "#94a3b8" }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: "12px",
+                        border: "none",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      }}
+                      cursor={{ fill: "#f8fafc", opacity: 0.5 }}
+                    />
+                    <Bar
+                      dataKey="value"
+                      fill="#818cf8"
+                      radius={[0, 6, 6, 0]}
+                      background={{ fill: "#f8fafc", radius: 6 }}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartCard>
             </Grid>
 
             {/* 3. Salary Components */}
-            <Grid item xs={12} md={6} width={{ xs: "100%", sm: "100%", md: "31.5%" }}>
+            <Grid
+              item
+              xs={12}
+              md={6}
+              width={{ xs: "100%", sm: "100%", md: "48%", lg: "32%" }}
+            >
               <ChartCard title="Salary Components">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={payrollData.slice(0, 7)} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#94a3b8', angle: -20, textAnchor: 'end' }} axisLine={false} interval={0} height={40} />
-                    <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} />
+                  <AreaChart
+                    data={payrollData.slice(0, 7)}
+                    margin={{ top: 10, right: 0, left: -20, bottom: 0 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#f1f5f9"
+                    />
+                    <XAxis
+                      dataKey="name"
+                      tick={{
+                        fontSize: 10,
+                        fill: "#94a3b8",
+                        angle: -20,
+                        textAnchor: "end",
+                      }}
+                      axisLine={false}
+                      interval={0}
+                      height={40}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 12, fill: "#94a3b8" }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: "12px",
+                        border: "none",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      }}
+                    />
                     <Legend verticalAlign="top" height={36} iconType="circle" />
-                    <Area type="monotone" dataKey="allowances" stroke="#3b82f6" strokeWidth={3} fillOpacity={0.3} fill="#3b82f6" />
-                    <Area type="monotone" dataKey="deductions" stroke="#ef4444" strokeWidth={3} fillOpacity={0.3} fill="#ef4444" />
+                    <Area
+                      type="monotone"
+                      dataKey="allowances"
+                      stroke="#3b82f6"
+                      strokeWidth={3}
+                      fillOpacity={0.3}
+                      fill="#3b82f6"
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="deductions"
+                      stroke="#ef4444"
+                      strokeWidth={3}
+                      fillOpacity={0.3}
+                      fill="#ef4444"
+                    />
                   </AreaChart>
                 </ResponsiveContainer>
               </ChartCard>
@@ -479,29 +649,82 @@ const ReportsPage = () => {
         ) : (
           /* ATTENDANCE WIDGETS */
           <>
-            <Grid item xs={12} md={6} width={{ xs: "100%", sm: "100%", md: "32%" }}>
+            <Grid
+              item
+              xs={12}
+              md={6}
+              width={{ xs: "100%", sm: "100%", md: "32%" }}
+            >
               <ChartCard title="Daily Attendance">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={attendanceTrends} barGap={4} margin={{ top: 10, bottom: 0, left: -10, right: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} interval={0} />
-                    <Tooltip contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} cursor={{ fill: '#f8fafc' }} />
-                    <Bar dataKey="present" fill="#3d52a0" radius={[4, 4, 4, 4]} barSize={20} />
-                    <Bar dataKey="absent" fill="#ef4444" radius={[4, 4, 4, 4]} barSize={20} />
+                  <BarChart
+                    data={attendanceTrends}
+                    barGap={4}
+                    margin={{ top: 10, bottom: 0, left: -10, right: 0 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#f1f5f9"
+                    />
+                    <XAxis
+                      dataKey="day"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12, fill: "#94a3b8" }}
+                      interval={0}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: "12px",
+                        border: "none",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      }}
+                      cursor={{ fill: "#f8fafc" }}
+                    />
+                    <Bar
+                      dataKey="present"
+                      fill="#3d52a0"
+                      radius={[4, 4, 4, 4]}
+                      barSize={20}
+                    />
+                    <Bar
+                      dataKey="absent"
+                      fill="#ef4444"
+                      radius={[4, 4, 4, 4]}
+                      barSize={20}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartCard>
             </Grid>
 
             {/* Weekly Overview (Donut) */}
-            <Grid item xs={12} md={6} width={{ xs: "100%", sm: "100%", md: "32%" }}>
+            <Grid
+              item
+              xs={12}
+              md={6}
+              width={{ xs: "100%", sm: "100%", md: "32%" }}
+            >
               <ChartCard title="Weekly Stats">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={[
-                        { name: 'Present', value: attendanceData.filter(a => a.status === 'Present').length, fill: '#3d52a0' },
-                        { name: 'Absent', value: attendanceData.filter(a => a.status === 'Absent').length, fill: '#ef4444' }
+                        {
+                          name: "Present",
+                          value: attendanceData.filter(
+                            (a) => a.status === "Present",
+                          ).length,
+                          fill: "#3d52a0",
+                        },
+                        {
+                          name: "Absent",
+                          value: attendanceData.filter(
+                            (a) => a.status === "Absent",
+                          ).length,
+                          fill: "#ef4444",
+                        },
                       ]}
                       innerRadius={80}
                       outerRadius={100}
@@ -512,24 +735,70 @@ const ReportsPage = () => {
                       <Cell fill="#3d52a0" />
                       <Cell fill="#ef4444" />
                     </Pie>
-                    <Tooltip contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} />
-                    <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: "12px",
+                        border: "none",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      }}
+                    />
+                    <Legend
+                      verticalAlign="bottom"
+                      height={36}
+                      iconType="circle"
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </ChartCard>
             </Grid>
 
             {/* Late Arrivals (Area with Shadow) */}
-            <Grid item xs={12} md={6} width={{ xs: "100%", sm: "100%", md: "31.5%" }}>
+            <Grid
+              item
+              xs={12}
+              md={6}
+              width={{ xs: "100%", sm: "100%", md: "31.5%" }}
+            >
               <ChartCard title="Absenteeism Trend">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={attendanceTrends} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} padding={{ left: 10, right: 10 }} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
-                    <Tooltip contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} />
+                  <LineChart
+                    data={attendanceTrends}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#f1f5f9"
+                    />
+                    <XAxis
+                      dataKey="day"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12, fill: "#94a3b8" }}
+                      padding={{ left: 10, right: 10 }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12, fill: "#94a3b8" }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: "12px",
+                        border: "none",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      }}
+                    />
                     <Legend verticalAlign="top" height={36} />
-                    <Line type="monotone" dataKey="absent" stroke="#ef4444" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} name="Absentees" />
+                    <Line
+                      type="monotone"
+                      dataKey="absent"
+                      stroke="#ef4444"
+                      strokeWidth={3}
+                      dot={{ r: 4 }}
+                      activeDot={{ r: 6 }}
+                      name="Absentees"
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               </ChartCard>
@@ -538,13 +807,12 @@ const ReportsPage = () => {
         )}
       </Grid>
 
-
       {/* 4. DATA TABLE */}
       <DataTableCard>
         <TableContainer>
           <Table>
             <TableHead>
-              <TableRow sx={{ bgcolor: '#f8fafc' }}>
+              <TableRow sx={{ bgcolor: "#f8fafc" }}>
                 {activeTab === 0 ? (
                   <>
                     <HeaderCell>Employee Name</HeaderCell>
@@ -575,18 +843,63 @@ const ReportsPage = () => {
                         // Payroll Row
                         <>
                           <TableCell>
-                            <Stack direction="row" spacing={2} alignItems="center">
-                              <Avatar sx={{ bgcolor: '#e0e7ff', color: '#3d52a0', fontWeight: 'bold' }}>{row.name?.[0]}</Avatar>
+                            <Stack
+                              direction="row"
+                              spacing={2}
+                              alignItems="center"
+                            >
+                              <Avatar
+                                sx={{
+                                  bgcolor: "#e0e7ff",
+                                  color: "#3d52a0",
+                                  fontWeight: "bold",
+                                }}
+                              >
+                                {row.name?.[0]}
+                              </Avatar>
                               <Box>
-                                <Typography variant="subtitle2" fontWeight={700}>{row.name}</Typography>
+                                <Typography
+                                  variant="subtitle2"
+                                  fontWeight={700}
+                                >
+                                  {row.name}
+                                </Typography>
                               </Box>
                             </Stack>
                           </TableCell>
                           <TableCell>
-                            <Chip label={row.role || "N/A"} size="small" sx={{ bgcolor: '#f1f5f9', fontWeight: 600, color: '#475569' }} />
+                            <Chip
+                              label={row.role || "N/A"}
+                              size="small"
+                              sx={{
+                                bgcolor: "#f1f5f9",
+                                fontWeight: 600,
+                                color: "#475569",
+                              }}
+                            />
                           </TableCell>
                           <TableCell align="center">
-                            <Chip label={row.status} size="small" variant={row.status === "Unpaid" ? "outlined" : "filled"} sx={{ bgcolor: row.status === "Unpaid" ? "transparent" : bgcolor, color, fontWeight: 800, borderRadius: '20px', minWidth: 80, border: row.status === "Unpaid" ? `1px solid ${color}` : "none" }} />
+                            <Chip
+                              label={row.status}
+                              size="small"
+                              variant={
+                                row.status === "Unpaid" ? "outlined" : "filled"
+                              }
+                              sx={{
+                                bgcolor:
+                                  row.status === "Unpaid"
+                                    ? "transparent"
+                                    : bgcolor,
+                                color,
+                                fontWeight: 800,
+                                borderRadius: "20px",
+                                minWidth: 80,
+                                border:
+                                  row.status === "Unpaid"
+                                    ? `1px solid ${color}`
+                                    : "none",
+                              }}
+                            />
                           </TableCell>
                           <TableCell>{row.payment_date}</TableCell>
                         </>
@@ -594,11 +907,33 @@ const ReportsPage = () => {
                         // Attendance Row
                         <>
                           <TableCell>
-                            <Stack direction="row" spacing={2} alignItems="center">
-                              <Avatar sx={{ bgcolor: '#edf2ff', color: '#3d52a0', fontWeight: 'bold' }}>{row.name?.[0]}</Avatar>
+                            <Stack
+                              direction="row"
+                              spacing={2}
+                              alignItems="center"
+                            >
+                              <Avatar
+                                sx={{
+                                  bgcolor: "#edf2ff",
+                                  color: "#3d52a0",
+                                  fontWeight: "bold",
+                                }}
+                              >
+                                {row.name?.[0]}
+                              </Avatar>
                               <Box>
-                                <Typography variant="subtitle2" fontWeight={700}>{row.name}</Typography>
-                                <Typography variant="caption" color="text.secondary">{row.employee_id}</Typography>
+                                <Typography
+                                  variant="subtitle2"
+                                  fontWeight={700}
+                                >
+                                  {row.name}
+                                </Typography>
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                >
+                                  {row.employee_id}
+                                </Typography>
                               </Box>
                             </Stack>
                           </TableCell>
@@ -607,17 +942,29 @@ const ReportsPage = () => {
                           <TableCell>{row.check_out_time}</TableCell>
                           <TableCell>{row.working_hours}</TableCell>
                           <TableCell align="center">
-                            <Chip label={row.status} size="small" sx={{ bgcolor, color, fontWeight: 800, borderRadius: '6px', minWidth: 80 }} />
+                            <Chip
+                              label={row.status}
+                              size="small"
+                              sx={{
+                                bgcolor,
+                                color,
+                                fontWeight: 800,
+                                borderRadius: "6px",
+                                minWidth: 80,
+                              }}
+                            />
                           </TableCell>
                         </>
                       )}
                     </TableRow>
-                  )
+                  );
                 })}
               {filteredData.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={7} align="center" sx={{ py: 6 }}>
-                    <Typography color="text.secondary">No records found matching your filters.</Typography>
+                    <Typography color="text.secondary">
+                      No records found matching your filters.
+                    </Typography>
                   </TableCell>
                 </TableRow>
               )}
@@ -629,18 +976,17 @@ const ReportsPage = () => {
             page={page}
             rowsPerPage={rowsPerPage}
             onPageChange={(e, p) => setPage(p)}
-            onRowsPerPageChange={(e) => setRowsPerPage(parseInt(e.target.value, 10))}
+            onRowsPerPageChange={(e) =>
+              setRowsPerPage(parseInt(e.target.value, 10))
+            }
           />
         </TableContainer>
       </DataTableCard>
 
       {/* 5. ADVANCE SALARY HISTORY TABLE (Payroll Only via Tab 0) */}
       {activeTab === 0 && (
-        <>
-          {/* ADVANCE HISTORY REMOVED/HIDDEN UNTIL API SUPPORT */}
-        </>
+        <>{/* ADVANCE HISTORY REMOVED/HIDDEN UNTIL API SUPPORT */}</>
       )}
-
     </PageContainer>
   );
 };
